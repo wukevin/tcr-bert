@@ -2,6 +2,16 @@
 
 TCR-BERT is a large language model trained on T-cell receptor sequences, built using a lightly modified BERT architecture with tweaked pre-training objectives. We make significant use of the HuggingFace transformers library (https://huggingface.co/transformers/index.html) in building our model.
 
+## Installation
+
+To install TCR-BERT, clone the GitHub repository and create its requisite conda environment as follows.
+
+```bash
+conda env create -f environment.yml
+```
+
+Afterwards, use `conda activate tcr` before running any commands described below.
+
 ## Model availability
 
 ### TCR-BERT (pretrained)

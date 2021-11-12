@@ -10,7 +10,7 @@ To install TCR-BERT, clone the GitHub repository and create its requisite conda 
 conda env create -f environment.yml
 ```
 
-Afterwards, use `conda activate tcr` before running any commands described below.
+Afterwards, use `conda activate tcrbert` before running any commands described below.
 
 ## Model availability
 

@@ -120,6 +120,8 @@ We provide several Jupyter notebooks that demonstrate more interactive, in-depth
 * `transformers_glanville_classifier_and_clustering.ipynb` containing classification analysis and clustering analysis using the Glanville dataset
 * `transformers_finetuned_tcr_engineering_mlm_gen.ipynb` containing code used for generating, analyzing, and visualizing novel TCR sequences binding to murine GP33.
 
+To run these, you must first install jupyter notebook support under the `tcrbert` conda environment (these packages are not included by default to save space). You can do this by running `conda activate tcrbert && conda install -c conda-forge notebook`. 
+
 ## Selected References
 
 J. Glanville et al., Identifying specificity groups in the t cell receptor repertoire. Nature 547(7661), 94–98 (2017).

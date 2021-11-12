@@ -234,7 +234,7 @@ def load_fill_mask_pipeline(model_dir: str, device: int = -1):
             raise ValueError(f"Unrecognized BERT variant: {bert_variant}")
     else:
         logging.debug("Model not found locally, attempting to find online")
-        model = BertForMaskedLM.from_pretrained(model_dir, use_auth_token=True)
+        model = BertForMaskedLM.from_pretrained(model_dir)
     assert model is not None, f"Could not load MLM model"
     tok = ft.get_pretrained_bert_tokenizer(model_dir)
     pipeline = FillMaskPipeline(model, tok, device=device)
@@ -245,7 +245,7 @@ def load_embed_pipeline(model_dir: str, device: int):
     """
     Load the pipeline object that gets embeddings
     """
-    model = AutoModel.from_pretrained(model_dir, use_auth_token=True)
+    model = AutoModel.from_pretrained(model_dir)
     tok = ft.get_pretrained_bert_tokenizer(model_dir)
     pipeline = FeatureExtractionPipeline(model, tok, device=device)
     return pipeline
@@ -273,9 +273,7 @@ def load_classification_pipeline(
             return_all_scores=True,
         )
     else:
-        model = BertForSequenceClassification.from_pretrained(
-            model_dir, use_auth_token=True
-        )
+        model = BertForSequenceClassification.from_pretrained(model_dir)
         pipeline = TextClassificationPipeline(
             model=model, tokenizer=tok, return_all_scores=True, device=device
         )
@@ -291,9 +289,7 @@ def load_classification_logits_pipeline(model_dir: str, device: int = 0):
     except OSError:
         tok = ft.get_aa_bert_tokenizer(64)
     # The exact model doesn't really matter
-    model = BertForSequenceClassification.from_pretrained(
-        model_dir, use_auth_token=True
-    )
+    model = BertForSequenceClassification.from_pretrained(model_dir)
     pipeline = TextClassificationLogitsPipeline(
         model=model, tokenizer=tok, return_all_scores=True, device=device
     )
@@ -315,10 +311,7 @@ def get_transformer_attentions(
     if isinstance(model_dir, str):
         tok = ft.get_pretrained_bert_tokenizer(model_dir)
         model = BertModel.from_pretrained(
-            model_dir,
-            add_pooling_layer=False,
-            output_attentions=True,
-            use_auth_token=True,
+            model_dir, add_pooling_layer=False, output_attentions=True,
         ).to(device)
     elif isinstance(model_dir, nn.Module):
         tok = ft.get_aa_bert_tokenizer(64)
@@ -392,9 +385,9 @@ def get_transformer_embeddings(
     except OSError:
         logging.warning("Could not load saved tokenizer, loading fresh instance")
         tok = ft.get_aa_bert_tokenizer(64)
-    model = BertModel.from_pretrained(
-        model_dir, add_pooling_layer=method == "pool", use_auth_token=True
-    ).to(device)
+    model = BertModel.from_pretrained(model_dir, add_pooling_layer=method == "pool").to(
+        device
+    )
 
     chunks = dl.chunkify(seqs, batch_size)
     # This defaults to [None] to zip correctly
@@ -509,7 +502,7 @@ def get_transformer_nsp_preds(
 
     # Load the model
     device_id = utils.get_device(device)
-    model = model_cls.from_pretrained(model_dir, use_auth_token=True).to(device_id)
+    model = model_cls.from_pretrained(model_dir).to(device_id)
     dset = dl.TcrNextSentenceDataset(
         *zip(*seq_pairs), neg_ratio=inject_negatives, shuffle=False
     )

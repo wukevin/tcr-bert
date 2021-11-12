@@ -164,9 +164,7 @@ class TwoPartBertClassifier(nn.Module):
             retval = BertModel(config)
         else:
             retval = AutoModel.from_pretrained(
-                self.pretrained,
-                add_pooling_layer=self.pooling_strat == "pool",
-                use_auth_token=True,
+                self.pretrained, add_pooling_layer=self.pooling_strat == "pool"
             )
         return retval
 

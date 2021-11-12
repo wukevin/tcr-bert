@@ -29,7 +29,7 @@ These models can be downloaded automatically by using Python code like the follo
 # Different model classes needed for different models
 from transformers import BertModel
 # This model was pretrained on MAA and TRB classification
-tcrbert_model = BertModel.from_pretrained("wukevin/tcr-bert", use_auth_token=True)
+tcrbert_model = BertModel.from_pretrained("wukevin/tcr-bert")
 ```
 
 This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace documentation for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.

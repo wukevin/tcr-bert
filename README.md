@@ -32,7 +32,7 @@ from transformers import BertModel
 tcrbert_model = BertModel.from_pretrained("wukevin/tcr-bert")
 ```
 
-This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace [documentation]((https://huggingface.co/transformers/index.html)) for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.
+This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace [documentation](https://huggingface.co/transformers/index.html) for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.
 
 ### Fine-tuned TCR-BERT
 

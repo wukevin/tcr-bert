@@ -1,6 +1,6 @@
 # TCR-BERT
 
-TCR-BERT is a large language model trained on T-cell receptor sequences, built using a lightly modified BERT architecture with tweaked pre-training objectives. We make significant use of the HuggingFace transformers library (https://huggingface.co/transformers/index.html) in building our model.
+TCR-BERT is a large language model trained on T-cell receptor sequences, built using a lightly modified BERT architecture with tweaked pre-training objectives. Please see our [pre-print](https://www.biorxiv.org/content/10.1101/2021.11.18.469186v1) for more information. 
 
 ## Installation
 
@@ -32,7 +32,7 @@ from transformers import BertModel
 tcrbert_model = BertModel.from_pretrained("wukevin/tcr-bert")
 ```
 
-This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace documentation for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.
+This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace [documentation]((https://huggingface.co/transformers/index.html)) for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.
 
 ### Fine-tuned TCR-BERT
 

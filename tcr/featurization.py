@@ -209,7 +209,6 @@ def get_pretrained_bert_tokenizer(path: str) -> BertTokenizer:
         cls_token=CLS,
         mask_token=MASK,
         padding_side="right",
-        use_auth_token=True,
     )
     return tok
 

@@ -4,7 +4,7 @@ TCR-BERT is a large language model trained on T-cell receptor sequences, built u
 
 ## Installation
 
-To install TCR-BERT, clone the GitHub repository and create its requisite conda environment as follows.
+To install TCR-BERT, clone the GitHub repository and create its requisite conda environment as follows (should take <10 minutes).
 
 ```bash
 conda env create -f environment.yml
@@ -68,6 +68,8 @@ Please see our example Jupyter notebooks for additional examples using this mode
 
 ## Usage
 
+TCR-BERT has been tested on a machine running Ubuntu 18.04.3; with the provided conda environment, this software should be compatible with any recent Linux distrubtion. Also note that while TCR-BERT does not have any special hardware requirements, TCR-BERT's runtime benefits greatly from having a GPU available, particularly for larger inputs.
+
 ### Using TCR-BERT to identify antigen specificity groups
 
 TCR-BERT can be used to embed sequences. These embeddings can then be used to cluster sequences into shared specificity groups using the Leiden clustering algorithm. The script `bin/embed_and_cluster.py` performs this with the following positional arguments (use `-h` for a complete list of all arguments):
@@ -75,13 +77,20 @@ TCR-BERT can be used to embed sequences. These embeddings can then be used to cl
 * Input file: File containing list of sequences. This could be formatted as one sequence per line, or as a tab-delimited file with the sequence as the first column.
 * Output file: File containing, on each line, a comma-separated list of sequences. Each line corresponds to one group of sequences predicted to share antigen specificity.
 
-An example of its usage is below. 
+An example of its usage is below; this snippet should take under a minute to run (assuming the TCR-BERT model is downloaded already), and its expected output is provided at `example_files/glanville_np177_training_patient_clustered.csv` for reference. 
 
 ```bash
-python bin/embed_and_cluster.py example_files/glanville_np177_training_patient.tsv temp.csv -r 128 -g 0
+❯ python bin/embed_and_cluster.py example_files/glanville_np177_training_patient.tsv temp.csv -r 128 -g 0
+INFO:root:Read in 1055 unique valid TCRs from example_files/glanville_np177_training_patient.tsv
+Some weights of the model checkpoint at wukevin/tcr-bert were not used when initializing BertModel: ['bert.pooler.dense.weight', 'bert.pooler.dense.bias']
+- This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+/home/wukevin/miniconda3/envs/tcr/lib/python3.9/site-packages/anndata/_core/anndata.py:119: ImplicitModificationWarning: Transforming to str index.
+  warnings.warn("Transforming to str index.", ImplicitModificationWarning)
+INFO:root:Writing 618 TCR clusters to: temp.csv
 ```
 
-In the above, we use the `-r` parameter to adjust the resolution of clustering, which affects the granularity of the clusters. Larger values corresponds to more granular clusters, whereas smaller values create coarser (more inclusive) clusters. The `-g` parameter is used to specify the index of the GPU to run on.
+In the above, we use the `-r` parameter to adjust the resolution of clustering, which affects the granularity of the clusters. Larger values corresponds to more granular clusters, whereas smaller values create coarser (more inclusive) clusters. The `-g` parameter is used to specify the index of the GPU to run on. This example should finish in less than 5 minutes on a machine with or without GPU availability.
 
 ### Training a model to predict TRB antigen binding
 

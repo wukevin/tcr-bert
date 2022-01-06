@@ -102,10 +102,13 @@ class TcrABSupervisedIdxDataset(Dataset):
         tcr_b_idx = ft.idx_encode(self.get_ith_tcr_b(idx, pad=True))
 
         label = self.get_ith_label(idx)
-        return {
-            "tcr_a": torch.from_numpy(tcr_a_idx),
-            "tcr_b": torch.from_numpy(tcr_b_idx),
-        }, torch.from_numpy(label).type(torch.long).squeeze()
+        return (
+            {
+                "tcr_a": torch.from_numpy(tcr_a_idx),
+                "tcr_b": torch.from_numpy(tcr_b_idx),
+            },
+            torch.from_numpy(label).type(torch.long).squeeze(),
+        )
 
 
 class TcrABSupervisedOneHotDataset(TcrABSupervisedIdxDataset):
@@ -116,10 +119,13 @@ class TcrABSupervisedOneHotDataset(TcrABSupervisedIdxDataset):
         tcr_b_idx = ft.one_hot(self.get_ith_tcr_b(idx, pad=True))
 
         label = self.get_ith_label(idx)
-        return {
-            "tcr_a": torch.from_numpy(tcr_a_idx),
-            "tcr_b": torch.from_numpy(tcr_b_idx),
-        }, torch.from_numpy(label).type(torch.long).squeeze()
+        return (
+            {
+                "tcr_a": torch.from_numpy(tcr_a_idx),
+                "tcr_b": torch.from_numpy(tcr_b_idx),
+            },
+            torch.from_numpy(label).type(torch.long).squeeze(),
+        )
 
 
 class TCRSupervisedIdxDataset(Dataset):
@@ -178,9 +184,10 @@ class TCRSupervisedIdxDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
         tcr_idx = ft.idx_encode(self.get_ith_tcr(idx, pad=True))
         label = self.get_ith_label(idx)
-        return {"seq": torch.from_numpy(tcr_idx)}, torch.from_numpy(label).type(
-            torch.long
-        ).squeeze()
+        return (
+            {"seq": torch.from_numpy(tcr_idx)},
+            torch.from_numpy(label).type(torch.long).squeeze(),
+        )
 
 
 class TcrSelfSupervisedDataset(TcrABSupervisedIdxDataset):
@@ -856,7 +863,7 @@ def sample_unlabelled_tcrdb_trb(
     Blacklist can be given to exclude certain sequences from sampling
 
     The following tests ensure reproducibility
-    all([a == b for a, b in zip(sample_unlabelled_tcrdb_trb(10), sample_unlabelled_tcrdb_trb(10))])
+    >>> all([a == b for a, b in zip(sample_unlabelled_tcrdb_trb(10), sample_unlabelled_tcrdb_trb(10))])
     True
     """
     tcrdb = load_tcrdb()
@@ -1380,9 +1387,7 @@ def load_bcc(
     """
     # Load in the tables
     tcr_table = pd.read_csv(
-        os.path.join(dirname, "GSE123813_bcc_tcr.txt"),
-        sep="\t",
-        index_col=0,
+        os.path.join(dirname, "GSE123813_bcc_tcr.txt"), sep="\t", index_col=0,
     )
     tcr_table.index.name = "cell.id"
     metadata_table = pd.read_csv(
@@ -1677,4 +1682,4 @@ if __name__ == "__main__":
 
     doctest.testmod()
     # main()
-    on_the_fly()
+    # on_the_fly()

@@ -57,11 +57,12 @@ You can then make predictions on new examples using the following code snippet:
 
 ```python
 import data_loaders as dl
+import model_utils
 
+net = model_utils.load_two_part_bert_classifier()
 # These two lists should zip together to form your TRA/TRB pairs
 tra_sequences = ["CAALYGNEKITF"]  # We show only one sequence for simplicity
 trb_sequences = ["CASSDAGGRNTLYF"]
-
 # Create a dataset wrapping these sequences
 my_dset = dl.TcrFineTuneDataset(tra_sequences, trb_sequences, skorch_mode=True)
 preds = net.predict_proba(my_dset)[:, 1]  # Returns a n_seq x 2 array of predictions, second col is positive

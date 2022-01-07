@@ -36,6 +36,8 @@ from neptune.experiments import Experiment
 from neptune.api_exceptions import ChannelsValuesSendBatchError
 from transformers.utils.dummy_pt_objects import AutoModelForMaskedLM
 
+import gdown
+
 import data_loader as dl
 import featurization as ft
 import utils
@@ -48,6 +50,16 @@ from transformer_custom import (
     BertForSequenceClassificationMulti,
     BertForThreewayNextSentencePrediction,
     TwoPartBertClassifier,
+)
+
+
+# https://drive.google.com/u/1/uc?id=1VZ1qyNmeYu7mTdDmSH1i00lKIBY26Qoo&export=download
+FINETUNED_DUAL_MODEL_ID = "1VZ1qyNmeYu7mTdDmSH1i00lKIBY26Qoo"
+FINETUNED_DUAL_MODEL_BASENAME = "tcrbert_lcmv_finetuned_1.0.tar.gz"
+FINETUNED_DUAL_MODEL_URL = f"https://drive.google.com/uc?id={FINETUNED_DUAL_MODEL_ID}"
+FINETUNED_DUAL_MODEL_MD5 = "e51d8ae58974c2e02d37fd4b51d448ee"
+FINETUNED_MODEL_CACHE_DIR = os.path.join(
+    os.path.expanduser("~"), ".cache/gdown/tcrbert"
 )
 
 
@@ -192,10 +204,27 @@ def get_pretrained_model_string(model_path: str) -> str:
     return model_path_chunks[max(checkpoint_idx) - 1]
 
 
-def load_two_part_bert_classifier(model_dir: str, device: int = -1) -> skorch.NeuralNet:
+def load_two_part_bert_classifier(
+    model_dir: Optional[str] = None, device: int = -1
+) -> skorch.NeuralNet:
     """
     Load the model as a skorch neuralnet wrapping a TwoPartBertClassifier
+    If model_dir is not given, defaults to a cache dir and automatically download model
     """
+    if model_dir is None:
+        dl_path = gdown.cached_download(
+            FINETUNED_DUAL_MODEL_URL,
+            path=os.path.join(FINETUNED_MODEL_CACHE_DIR, FINETUNED_DUAL_MODEL_BASENAME),
+            md5=FINETUNED_DUAL_MODEL_MD5,
+            postprocess=gdown.extractall,
+            quiet=False,
+        )
+        logging.info(f"Model tarball at: {dl_path}")
+        model_dir = os.path.join(
+            FINETUNED_MODEL_CACHE_DIR,
+            "lcmv_ab_finetune_cls_pooling_False_sharedencoder_0.2_dropout_25_epochs_3e-05_lr_linear_lrsched",
+        )
+
     assert os.path.isdir(model_dir), f"Cannot find path: {model_dir}"
 
     # Read in json of params
@@ -203,7 +232,7 @@ def load_two_part_bert_classifier(model_dir: str, device: int = -1) -> skorch.Ne
         model_params = json.load(source)
     net = skorch.NeuralNet(
         module=TwoPartBertClassifier,
-        module__pretrained="wukevin/tcr-bert-mlm-only",  # Doesn't really matter
+        module__pretrained="wukevin/tcr-bert-mlm-only",  # Doesn't really matter, will be overwritten
         module__freeze_encoder=model_params["freeze"],
         module__dropout=model_params["dropout"],
         module__separate_encoders=not model_params["sharedencoder"],
@@ -608,7 +637,9 @@ def get_tape_embedding(
 
 
 def main():
-    print(load_fill_mask_pipeline("wukevin/tcr-bert-mlm-only"))
+    """On the fly testing"""
+    # print(load_fill_mask_pipeline("wukevin/tcr-bert-mlm-only"))
+    print(load_two_part_bert_classifier())
 
 
 if __name__ == "__main__":

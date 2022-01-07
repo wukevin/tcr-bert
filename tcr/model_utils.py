@@ -638,8 +638,14 @@ def get_tape_embedding(
 
 def main():
     """On the fly testing"""
-    # print(load_fill_mask_pipeline("wukevin/tcr-bert-mlm-only"))
-    print(load_two_part_bert_classifier())
+    import data_loader as dl
+
+    net = load_two_part_bert_classifier()
+    tra_sequences = ["CAALYGNEKITF"]  # We show only one sequence for simplicity
+    trb_sequences = ["CASSDAGGRNTLYF"]
+    my_dset = dl.TcrFineTuneDataset(tra_sequences, trb_sequences, skorch_mode=True)
+    preds = net.predict_proba(my_dset)[:, 1]
+    print(preds)
 
 
 if __name__ == "__main__":

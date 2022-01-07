@@ -66,6 +66,7 @@ trb_sequences = ["CASSDAGGRNTLYF"]
 # Create a dataset wrapping these sequences
 my_dset = dl.TcrFineTuneDataset(tra_sequences, trb_sequences, skorch_mode=True)
 preds = net.predict_proba(my_dset)[:, 1]  # Returns a n_seq x 2 array of predictions, second col is positive
+print(preds)  # [0.26887017]
 ```
 
 Please see our example Jupyter notebooks for additional examples using this model.

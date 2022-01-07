@@ -36,18 +36,21 @@ This will download the model (or use a cached version if previously downloaded) 
 
 ### Fine-tuned TCR-BERT
 
-We fine-tune our TCR-BERT model to predict LCMV GP33 antigen binding given TRA/TRB amino acid pairs (see manuscript for additional details). This uses an architecture augmented from those natively supported in the `transformers` library; thus, this model cannot be loaded using the above Python API. Instead, download latest version of the model as listed:
+We fine-tune our TCR-BERT model to predict LCMV GP33 antigen binding given TRA/TRB amino acid pairs (see manuscript for additional details). This uses an architecture augmented from those natively supported in the `transformers` library; thus, this model cannot be loaded using the above Python API. Rather, we make the model available for download at the following link.
 
 | Model version | Description | Link | tar.gz `md5sum` |
 | --- | --- | --- | --- |
 | 1.0 | Initial release | [Link](https://drive.google.com/file/d/1VZ1qyNmeYu7mTdDmSH1i00lKIBY26Qoo/view?usp=sharing) | `e51d8ae58974c2e02d37fd4b51d448ee`
 
-After downloading and unpacking the model to `some_dir`, the model itself can be loaded using a helper function implemented under `model_utils.py`.
+We also provide a function implemented under `model_utils.py` that provides a single-line call to download (and cache) the latest version of the model, and load the model.
 
 ```python
 import model_utils
 # Returns a skorch.NeuralNet object
-net = model_utils.load_two_part_bert_classifier("some_dir")
+net = model_utils.load_two_part_bert_classifier()
+# Alternatively, this function can be used to load a manually downloaded
+# and unpacked model directory, as below:
+# net = model_utils.load_two_part_bert_classifier("model_dir")
 ```
 
 You can then make predictions on new examples using the following code snippet:

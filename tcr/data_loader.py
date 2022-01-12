@@ -1204,7 +1204,6 @@ def load_tcrdb(
     https://academic.oup.com/nar/article/49/D1/D468/5912818
     http://bioinfo.life.hust.edu.cn/TCRdb/#/
     """
-
     accessions_list_fname = os.path.join(dirname, "tcrdb_accessions_21_03_22.txt")
     with open(accessions_list_fname, "r") as source:
         accessions = [line.strip() for line in source if not line.startswith("#")]
@@ -1242,12 +1241,14 @@ def collect_tra_trb(s: str) -> Dict[str, List[str]]:
     {'TRA': ['foo', 'baz'], 'TRB': ['bar']}
     >>> collect_tra_trb("TRB:bar")
     {'TRA': [''], 'TRB': ['bar']}
+    >>> collect_tra_trb("TRB:bar;TRA:foo")
+    {'TRA': ['foo'], 'TRB': ['bar']}
     """
     retval = {"TRA": [], "TRB": []}
     for part in s.split(";"):
         k, v = part.split(":")
         retval[k].append(v)
-    # Return empty strings if
+    # Return empty strings if TRA/TRB are not found
     if not retval["TRA"]:
         retval["TRA"].append("")
     if not retval["TRB"]:

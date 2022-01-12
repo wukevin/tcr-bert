@@ -1300,7 +1300,12 @@ def dedup_and_merge_labels(
 
 def load_clonotypes_csv_general(fname: str) -> pd.DataFrame:
     """
-    Load clonotypes.csv file
+    Load clonotypes.csv file. This file is expected to be a comma-delimited table with columns
+    "clonotype_id" and "cdr3s_aa".
+
+    Returned data frame is the df contained in fname with added columns TRA_aa and TRB_aa
+    containing amino acid sequences for TRA/TRB, respectively. In the event that multiple TRA/TRB
+    sequences are listed, we take the last listed one from each
     """
     # Read file
     df = pd.read_csv(fname, index_col=0)
@@ -1672,10 +1677,12 @@ def write_lcmv_subsampled_benchmark_data():
 
 def on_the_fly():
     """On the fly testing"""
-    table = load_longitudinal_covid_trbs()
-    print(table)
-    print(collections.Counter(table["patient"]).most_common())
-    print(collections.Counter(table["celltype"]).most_common())
+    # table = load_longitudinal_covid_trbs()
+    # print(table)
+    # print(collections.Counter(table["patient"]).most_common())
+    # print(collections.Counter(table["celltype"]).most_common())
+    df = load_clonotypes_csv_general(sys.argv[1])
+    print(df)
 
 
 if __name__ == "__main__":
@@ -1683,4 +1690,4 @@ if __name__ == "__main__":
 
     doctest.testmod()
     # main()
-    # on_the_fly()
+    on_the_fly()

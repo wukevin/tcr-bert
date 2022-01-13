@@ -32,7 +32,21 @@ from transformers import BertModel
 tcrbert_model = BertModel.from_pretrained("wukevin/tcr-bert")
 ```
 
-This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace [documentation](https://huggingface.co/transformers/index.html) for more details on this API). We leverage this API within the scripts described in the "Usage" section below, as well as in example Jupyter notebooks.
+This will download the model (or use a cached version if previously downloaded) and load the pre-trained weights as appropriate (see the HuggingFace [documentation](https://huggingface.co/transformers/index.html) for more details on this API). To actually use this model to perform a task like predicting which (of 45) antigen peptides a TRB sequence might react to), you can use the following code snippet.
+
+```python
+import model_utils  # found under the "tcr" folder
+
+# Load a TextClassificationPipeline using TCR-BERT
+tcrbert_trb_cls = model_utils.load_classification_pipeline("wukevin/tcr-bert", device=0)
+# For the pipeline, input amino acids are expected to be spaced
+df = model_utils.reformat_classification_pipeline_preds(tcrbert_trb_cls([
+    "C A S S P V T G G I Y G Y T F",  # Binds to NLVPMVATV CMV antigen
+    "C A T S G R A G V E Q F F",      # Binds to GILGFVFTL flu antigen
+]))  # Return a dataframe where each column is an antigen, each row corresponds to an input
+```
+
+Please see our example Jupyter notebooks for more usage examples with this API.
 
 ### Fine-tuned TCR-BERT
 

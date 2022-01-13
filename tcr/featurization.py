@@ -170,11 +170,12 @@ def write_vocab(vocab: Iterable[str], fname: str) -> str:
 
 
 def get_aa_bert_tokenizer(
-    max_len: int, d=AMINO_ACIDS_WITH_ALL_ADDITIONAL_TO_IDX
+    max_len: int = 64, d=AMINO_ACIDS_WITH_ALL_ADDITIONAL_TO_IDX
 ) -> BertTokenizer:
     """
     Tokenizer for amino acid sequences. Not *exactly* the same as BertTokenizer
     but mimics its behavior, encoding start with CLS and ending with SEP
+
     >>> get_aa_bert_tokenizer(10).encode(insert_whitespace("RKDES"))
     [25, 0, 2, 3, 4, 5, 24]
     """

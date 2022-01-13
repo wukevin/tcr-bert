@@ -11,6 +11,7 @@ from itertools import zip_longest
 from typing import *
 
 import numpy as np
+import pandas as pd
 from scipy.special import softmax
 
 import torch
@@ -281,7 +282,7 @@ def load_embed_pipeline(model_dir: str, device: int):
 
 
 def load_classification_pipeline(
-    model_dir: str, multilabel: bool = False, device: int = 0
+    model_dir: str = "wukevin/tcr-bert", multilabel: bool = False, device: int = 0
 ) -> TextClassificationPipeline:
     """
     Load the pipeline object that does classification
@@ -634,6 +635,25 @@ def get_tape_embedding(
         )
     assert len(tape_embeddings) == len(seqs)
     return tape_embeddings
+
+
+def reformat_classification_pipeline_preds(
+    x: List[List[Dict[str, Union[float, str]]]]
+) -> pd.DataFrame:
+    """
+    Helper function to take the output of a HuggingFace text classification pipeline
+    and reformat it to a easier to parse format -- a DatFrame where each row corresponds
+    to a single input and columns correspond to predicted labels
+
+    The huggingface text classification pipeline outputs, for each input:
+    [{'label': "foobar", "score": 0.29391}]
+    """
+    converted = []
+    for l in x:
+        l_dict = {d["label"]: d["score"] for d in l}
+        s = pd.Series(l_dict)
+        converted.append(s)
+    return pd.DataFrame(converted)
 
 
 def main():

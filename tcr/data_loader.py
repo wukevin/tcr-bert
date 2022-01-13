@@ -1298,14 +1298,17 @@ def dedup_and_merge_labels(
     return list(uniq_sequences), uniq_labels
 
 
-def load_clonotypes_csv_general(fname: str) -> pd.DataFrame:
+def load_clonotypes_csv_general(fname: str, single_return: bool = True) -> pd.DataFrame:
     """
     Load clonotypes.csv file. This file is expected to be a comma-delimited table with columns
     "clonotype_id" and "cdr3s_aa".
 
     Returned data frame is the df contained in fname with added columns TRA_aa and TRB_aa
-    containing amino acid sequences for TRA/TRB, respectively. In the event that multiple TRA/TRB
-    sequences are listed, we take the last listed one from each
+    containing amino acid sequences for TRA/TRB, respectively.
+
+    single_return = True is default/legacy behavior, where in the event that multiple TRA/TRB
+    sequences are listed, we take the last listed one from each. Setting this to false returns
+    a ;-delimited series of TCRs when multiple values are encountered.
     """
     # Read file
     df = pd.read_csv(fname, index_col=0)
@@ -1313,8 +1316,12 @@ def load_clonotypes_csv_general(fname: str) -> pd.DataFrame:
     tra_seqs, trb_seqs = [], []
     for i, row in df.iterrows():
         tra_trb_mapping = collect_tra_trb(row["cdr3s_aa"])
-        tra_seqs.append(tra_trb_mapping["TRA"][-1])
-        trb_seqs.append(tra_trb_mapping["TRB"][-1])
+        if single_return:
+            tra_seqs.append(tra_trb_mapping["TRA"][-1])
+            trb_seqs.append(tra_trb_mapping["TRB"][-1])
+        else:
+            tra_seqs.append(";".join(tra_trb_mapping["TRA"]))
+            trb_seqs.append(";".join(tra_trb_mapping["TRB"]))
     df["TRA_aa"] = tra_seqs
     df["TRB_aa"] = trb_seqs
     return df

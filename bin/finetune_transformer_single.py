@@ -211,7 +211,7 @@ def load_data_single(
         labels = df["label"]
         return list(zip(labels, tcrs))
     else:
-        raise ValueError(f"Unrecognized data keyword: {keyword}")
+        raise ValueError(f"Unrecognized data keyword or file not found: {keyword}")
 
 
 def load_data(

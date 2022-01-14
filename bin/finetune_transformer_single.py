@@ -92,10 +92,7 @@ def compute_metrics(pred: EvalPrediction) -> Dict[str, float]:
     # Update global metrics tracker
     global METRICS
     METRICS.append(
-        {
-            "auroc_per_label": auroc_values,
-            "auprc_per_label": auprc_values,
-        }
+        {"auroc_per_label": auroc_values, "auprc_per_label": auprc_values,}
     )
 
     auroc = np.mean(auroc_values)
@@ -208,6 +205,11 @@ def load_data_single(
         logging.info("Loading NSCLC TRBs")
         nsclc_table = dl.load_reuben_nsclc()
         return list(zip(nsclc_table["label"], nsclc_table["aminoAcid"]))
+    elif os.path.isfile(keyword):
+        df = pd.read_csv(keyword, sep=",")
+        tcrs = df[segment]
+        labels = df["label"]
+        return list(zip(labels, tcrs))
     else:
         raise ValueError(f"Unrecognized data keyword: {keyword}")
 
@@ -284,18 +286,19 @@ def get_bert_classifier(
     path: str, labels: Sequence[str], problem_type: str = "single_label_classification"
 ) -> BertForSequenceClassification:
     """Get BERT classifier model form the path"""
-    logging.info(f"Loading BERT classifier for {problem_type}")
     bert_class = (
         BertForSequenceClassification
         if problem_type == "single_label_classification"
         else BertForSequenceClassificationMulti
     )
-    if os.path.isdir(path):
+    logging.info(f"Loading BERT classifier for {problem_type}: {bert_class}")
+    if os.path.isdir(path) or path.startswith("wukevin/"):  # Poor heuristic
         logging.info(f"Loading BERT classifier from {path} with {len(labels)} labels")
-        retval = bert_class.from_pretrained(
-            path,
-            num_labels=len(labels),
-            id2label=dict(enumerate(labels)),
+        retval = bert_class.from_pretrained(path)
+        # Manually define the classifier layer to avoid shape mismatches
+        retval.num_labels = len(labels)
+        retval.classifier = nn.Linear(
+            in_features=retval.classifier.in_features, out_features=len(labels)
         )
     elif os.path.isfile(path) and path.split(".")[-1] == "json":
         logging.info(
@@ -325,9 +328,8 @@ def build_parser():
     parser.add_argument(
         "--data",
         type=str,
-        choices=["lcmv", "pird", "vdjdb", "covid", "nsclc"],
         nargs="*",
-        help="Datasets to train",
+        help="Datasets to train, keywords or filenames (files should be formatted as csv)",
     )
     parser.add_argument(
         "-b",

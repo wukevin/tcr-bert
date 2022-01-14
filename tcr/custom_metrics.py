@@ -159,10 +159,7 @@ def get_chain_to_coords(fname: str, average: bool = True) -> Dict[str, pd.DataFr
 
 
 def per_position_aa_count(
-    sequences: Sequence[str],
-    *,
-    normalize: bool = False,
-    psuedocount: int = 0,
+    sequences: Sequence[str], *, normalize: bool = False, psuedocount: int = 0,
 ) -> pd.DataFrame:
     """
     Return a count matrix of (seq_len, n_amino_acids) reflecting
@@ -350,6 +347,21 @@ def load_blosum(
     retval.drop(index="U", inplace=True)
     retval.drop(columns="U", inplace=True)
     return retval
+
+
+def auc_score_dual_vectors(y_true, y_false, curve: str = "auroc", **kwargs) -> float:
+    """
+    Compute the ROC AUC score but instead of having a vector of y_true and y_pred
+    this takes as input two vectors of preds corrresponding to true and false
+    """
+    labels = np.array([1] * len(y_true) + [0] * len(y_false))
+    preds = np.concatenate([y_true, y_false])
+    if curve == "auroc":
+        return metrics.roc_auc_score(labels, preds, **kwargs)
+    elif curve == "auprc":
+        return metrics.average_precision_score(labels, preds, **kwargs)
+    else:
+        raise ValueError(f"Unrecognized curve: {curve}")
 
 
 if __name__ == "__main__":

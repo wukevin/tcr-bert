@@ -113,6 +113,8 @@ In the above, we use the `-r` parameter to adjust the resolution of clustering, 
 
 ### Training a model to predict TRB antigen binding
 
+#### TCR-BERT as a black-box embeddings generator
+
 The most straightforward, data-efficient way to use TCR-BERT to perform TRB-antigen binding prediction is to use TCR-BERT to embed the TRB sequences, apply PCA to reduce the dimensionality of the embedding layer, and use a SVM to perform classification. This process is automated in the script (under `bin`) `embed_and_train_pcasvm.py`. This script takes three positional arguments:
 
 * Input file: tab-delimited file, where the first column lists TRB sequences, and the second column lists corresponding labels. Other columns are ignored. These inputs will be randomly split into training and test splits unless the `--test` argument is also provided.
@@ -141,6 +143,15 @@ INFO:root:Writing PCA-SVM model to outdir/pcasvm.sklearn
 
 These example files contain TRB sequences that are known to bind to the NP177 influenza A antigen, courtesy of a dataset published by Glanville et al., as well as a set of randomly selected endogenous human TRBs sampled from TCRdb (as a background negative set). Since we split this data by patient (rather than using default of random splits), we explicitly provide a separate set of test examples using the `--test` argument.
 
+#### Fine-tuning TCR-BERT
+
+In addition to training an SVM on top of TCR-BERT's embeddings, you can also directly fine-tune TCR-BERT (provided you have enough data to do so effectively). To do so, use the script under `bin/fintune_transformer_single.py`. As an input data file, provide a tab-separated `tsv` file with a column named `TRB` (or `TRA`) and a column named `label`. The `label` column should contain the TCR that the corresponding TCR binds to. If a TCR binds to multiple antigens, this can be expressed by joining the multiple antigens using a comma. Doing so will also automatically result in a multi-label classification problem (instead of the default multi-class classification problem). An example of the usage is as below:
+
+```bash
+python bin/finetune_transformer_single.py -p wukevin/tcr-bert --data data/pp65.csv -s TRB -o finetune_pp65
+```
+
+In the above, the `-p` option controls the pretrained model being used as a starting point, `--data` denotes the data file being used, `-s` indicates that finetuning for TRBs (controls how input files are read), and `-o` indicates the output folder for the resulting model and logs. The data file indicated above contains a sample input of sequences from the PIRD and VDJdb databases that bind and do not bind the pp65 antigen. (Note: this resulting model and approach isn't used in our manuscript, and is simply provided here for completeness.)
 ## Example Jupyter notebooks
 
 We provide several Jupyter notebooks that demonstrate more interactive, in-depth analysis using TCR-BERT. These notebooks also serve to replicate some of the results we present in our manuscript. Under the `jupyter` directory, please find:

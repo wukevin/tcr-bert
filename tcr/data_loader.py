@@ -1054,12 +1054,16 @@ def load_vdjdb(
     fname: str = os.path.join(LOCAL_DATA_DIR, "vdjdb-2021-02-02", "vdjdb.slim.txt"),
     species_filter: Optional[Iterable[str]] = ["MusMusculus", "HomoSapiens"],
     tra_trb_filter: Optional[Iterable[str]] = ["TRA", "TRB"],
+    addtl_filters: Optional[Dict[str, Iterable[str]]] = None,
     drop_null: bool = True,
     vocab_check: bool = True,
 ) -> pd.DataFrame:
     """
     Load VDJdb as a dataframe. 'cdr3' column is the column containing sequences
     ~62k examples, spanning 352 distinct antigens
+
+    Additional filters can be provided in the format
+    {column_name: ['acceptableValue1', 'acceptableValue2', ...]}
     """
     df = pd.read_csv(fname, sep="\t")
     if species_filter is not None:
@@ -1090,6 +1094,14 @@ def load_vdjdb(
         logging.info(f"Filtering TRA/TRB to: {tra_trb_filter}")
         keep_idx = [i for i in df.index if df.loc[i, "gene"] in tra_trb_filter]
         df = df.loc[keep_idx]
+    
+    # For each of the additional fitlers
+    if addtl_filters is not None:
+        for colname, keep_vals in addtl_filters.items():
+            logging.info(f"Filtering {colname} to {keep_vals}")
+            keep_idx = [i for i in df.index if df.loc[i, colname] in keep_vals]
+            df = df.loc[keep_idx]
+
     ab_counter = collections.Counter(df["gene"])
     logging.info(f"TRA: {ab_counter['TRA']} | TRB: {ab_counter['TRB']}")
     return df

@@ -294,8 +294,16 @@ def get_bert_classifier(
     logging.info(f"Loading BERT classifier for {problem_type}: {bert_class}")
     if os.path.isdir(path) or path.startswith("wukevin/"):  # Poor heuristic
         logging.info(f"Loading BERT classifier from {path} with {len(labels)} labels")
+        # Remake config with correct number of labels
+        cfg = BertConfig.from_pretrained(
+            path,
+            num_labels=len(labels),
+            id2label={str(i): l for i, l in enumerate(labels)},
+            label2id={l: i for i, l in enumerate(labels)},
+        )
         retval = bert_class.from_pretrained(path)
         # Manually define the classifier layer to avoid shape mismatches
+        retval.config = cfg
         retval.num_labels = len(labels)
         retval.classifier = nn.Linear(
             in_features=retval.classifier.in_features, out_features=len(labels)

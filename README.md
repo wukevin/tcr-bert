@@ -148,7 +148,7 @@ These example files contain TRB sequences that are known to bind to the NP177 in
 In addition to training an SVM on top of TCR-BERT's embeddings, you can also directly fine-tune TCR-BERT (provided you have enough data to do so effectively). To do so, use the script under `bin/fintune_transformer_single.py`. As an input data file, provide a tab-separated `tsv` file with a column named `TRB` (or `TRA`) and a column named `label`. The `label` column should contain the TCR that the corresponding TCR binds to. If a TCR binds to multiple antigens, this can be expressed by joining the multiple antigens using a comma. Doing so will also automatically result in a multi-label classification problem (instead of the default multi-class classification problem). An example of the usage is as below:
 
 ```bash
-python bin/finetune_transformer_single.py -p wukevin/tcr-bert --data data/pp65.csv -s TRB -o finetune_pp65
+python bin/finetune_transformer_single.py -p wukevin/tcr-bert --data data/pp65.tsv -s TRB -o finetune_pp65
 ```
 
 In the above, the `-p` option controls the pretrained model being used as a starting point, `--data` denotes the data file being used, `-s` indicates that finetuning for TRBs (controls how input files are read), and `-o` indicates the output folder for the resulting model and logs. The data file indicated above contains a sample input of sequences from the PIRD and VDJdb databases that bind and do not bind the pp65 antigen. (Note: this resulting model and approach isn't used in our manuscript, and is simply provided here for completeness.)

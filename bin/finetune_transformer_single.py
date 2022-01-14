@@ -206,7 +206,7 @@ def load_data_single(
         nsclc_table = dl.load_reuben_nsclc()
         return list(zip(nsclc_table["label"], nsclc_table["aminoAcid"]))
     elif os.path.isfile(keyword):
-        df = pd.read_csv(keyword, sep=",")
+        df = pd.read_csv(keyword, sep="\t")
         tcrs = df[segment]
         labels = df["label"]
         return list(zip(labels, tcrs))

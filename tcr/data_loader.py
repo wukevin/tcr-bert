@@ -1111,6 +1111,7 @@ def load_pird(
     fname: str = os.path.join(LOCAL_DATA_DIR, "pird", "pird_tcr_ab.csv"),
     tra_trb_only: bool = True,
     vocab_check: bool = True,
+    addtl_filters: Optional[Dict[str, Iterable[str]]] = None,
     with_antigen_only: bool = False,
 ) -> pd.DataFrame:
     """
@@ -1154,6 +1155,13 @@ def load_pird(
     logging.info(f"Unique antigen sequences: {len(set(nonnull_antigens))}")
     logging.info(f"PIRD data TRA/TRB instances: {collections.Counter(df['Locus'])}")
     retval = nonnull_antigens_df if with_antigen_only else df
+
+    # Perform additional filtering
+    if addtl_filters is not None:
+        for colname, keep_vals in addtl_filters.items():
+            logging.info(f"Filtering {colname} to {keep_vals}")
+            keep_idx = [i for i in retval.index if retval.loc[i, colname] in keep_vals]
+            retval = retval.loc[keep_idx]
 
     # Report metrics
     # print(df.loc[:, ["CDR3.alpha.aa", "CDR3.beta.aa"]])

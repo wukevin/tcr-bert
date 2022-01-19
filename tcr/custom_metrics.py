@@ -286,6 +286,53 @@ def percent_and_correct_clustered(
     - a mapping from antigen -> label
     - cluster assignments in the form [(x, y, z), (a, b), (c)]
       where each group inside list is a cluster
+
+    >>> percent_and_correct_clustered(
+    ...     {
+    ...         "x": "foo",
+    ...         "y": "foo",
+    ...         "z": "foo",
+    ...     },
+    ...     [("x", "y", "z")],
+    ... )
+    (1.0, 1.0)
+
+    >>> percent_and_correct_clustered(
+    ...     {
+    ...         "x": "foo",
+    ...         "y": "foo",
+    ...         "z": "foo",
+    ...         "a": "foo",
+    ...     },
+    ...     [("x", "y", "z")],
+    ... )
+    (0.75, 1.0)
+
+    >>> percent_and_correct_clustered(
+    ...     {
+    ...         "x": "foo",
+    ...         "y": "foo",
+    ...         "z": "foo",
+    ...         "a": "foo",
+    ...     },
+    ...     [("x", "y")],  # Cluster too small
+    ... )
+    (0.0, nan)
+
+    >>> percent_and_correct_clustered(
+    ...     {
+    ...         "w": "foo",
+    ...         "x": "foo",
+    ...         "y": "foo",
+    ...         "z": "foo",
+    ...         "a": "bar",
+    ...         "b": "bar",
+    ...         "c": "bar",
+    ...         "d": "bar",
+    ...     },
+    ...     [('x', 'y', 'a', 'w'), ('b', 'c', 'z', 'd')],
+    ... )
+    (1.0, 0.75)
     """
     correct_clustered, total_clustered = 0, 0
     for cluster in clusters:

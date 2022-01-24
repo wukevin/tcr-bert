@@ -15,6 +15,8 @@ import pandas as pd
 import sklearn
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.base import BaseEstimator
 from sklearn import metrics
 
 import git
@@ -28,6 +30,25 @@ import model_utils
 import canonical_models as models
 
 logging.basicConfig(level=logging.INFO)
+
+
+def get_model(keyword: str, n_components: int) -> BaseEstimator:
+    """
+    Return a sklearn type model given a keyword
+    """
+    if keyword == "pcasvm":
+        cls = models.ModelOnPCA(
+            SVC, n_components=n_components, probability=True, kernel="rbf"
+        )
+    elif keyword == "lr":
+        cls = LogisticRegression(penalty="l2", solver="liblinear")
+    elif keyword == "gpc":
+        # Gaussian Process Classifier
+        cls = GaussianProcessClassifier()
+    else:
+        raise ValueError(f"Unrecognized classifier: {keyword}")
+    logging.info(f"Classifier {cls}")
+    return cls
 
 
 def read_input_files(
@@ -69,7 +90,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-c",
         "--classifier",
         type=str,
-        choices=["pcasvm", "lr"],
+        choices=["pcasvm", "lr", "gpc"],
         default="pcasvm",
         help="Classifier to train",
     )
@@ -137,14 +158,7 @@ def main():
         device=args.gpu,
     )
 
-    if args.classifier == "pcasvm":
-        cls = models.ModelOnPCA(
-            SVC, n_components=args.numpcs, probability=True, kernel="rbf"
-        )
-    elif args.classifier == "lr":
-        cls = LogisticRegression(penalty="l2", solver="liblinear")
-    else:
-        raise ValueError(f"Unrecognized classifier: {args.classifier}")
+    cls = get_model(args.classifier, args.numpcs)
     cls.fit(train_embed, train_labels)
 
     # Report test set performance

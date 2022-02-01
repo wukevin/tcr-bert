@@ -116,7 +116,7 @@ def dedup(x: Iterable[Any]) -> List[Any]:
     return list(dict.fromkeys(x))
 
 
-def get_device(i: Optional[int] = None) -> str:
+def get_device(i: Optional[int] = None) -> torch.device:
     """
     Returns the i-th GPU if GPU is available, else CPU
     A negative value or a float will default to CPU

@@ -1687,6 +1687,21 @@ def chunkify_dict(
     return retval
 
 
+def min_dist_train_test_seqs(
+    train_seqs: Sequence[str], test_seqs: Collection[str]
+) -> np.ndarray:
+    """
+    For each training sequence, finding the minimum edit distance
+    to any test sequence.
+    """
+    retval = []
+    for seq in train_seqs:
+        # Calculate the edit distance to the most similar test sequence
+        d = min([Levenshtein.distance(seq, test_seq) for test_seq in test_seqs])
+        retval.append(d)
+    return np.array(retval)
+
+
 def sanitize_train_sequences(
     train_seqs: Sequence[str],
     train_labels: Sequence[str],
@@ -1698,13 +1713,9 @@ def sanitize_train_sequences(
     any test sequence
     """
     assert len(train_seqs) == len(train_labels)
-    train_dist = []
-    for seq in train_seqs:
-        # Calculate the edit distance to the most similar test sequence
-        d = min([Levenshtein.distance(seq, test_seq) for test_seq in test_seqs])
-        train_dist.append(d)
+    train_dist = min_dist_train_test_seqs(train_seqs, test_seqs)
 
-    passing_idx = np.where(np.array(train_dist) >= min_edit_dist)[0]
+    passing_idx = np.where(train_dist >= min_edit_dist)[0]
     logging.info(
         f"Passing >= {min_edit_dist} edit dist cutoff: {len(passing_idx)}/{len(train_seqs)}"
     )

@@ -22,6 +22,8 @@ from torch.utils.data import Dataset
 import numpy as np
 import pandas as pd
 
+import Levenshtein
+
 import featurization as ft
 import utils
 
@@ -1094,7 +1096,7 @@ def load_vdjdb(
         logging.info(f"Filtering TRA/TRB to: {tra_trb_filter}")
         keep_idx = [i for i in df.index if df.loc[i, "gene"] in tra_trb_filter]
         df = df.loc[keep_idx]
-    
+
     # For each of the additional fitlers
     if addtl_filters is not None:
         for colname, keep_vals in addtl_filters.items():
@@ -1683,6 +1685,30 @@ def chunkify_dict(
         assert len(set([len(v) for v in chunk.values()])) == 1
         retval.append(chunk)
     return retval
+
+
+def sanitize_train_sequences(
+    train_seqs: Sequence[str],
+    train_labels: Sequence[str],
+    test_seqs: Collection[str],
+    min_edit_dist: int = 2,
+) -> Tuple[List[str], List[str]]:
+    """
+    Return the training seqs/labels that are at least a given edit distance from
+    any test sequence
+    """
+    assert len(train_seqs) == len(train_labels)
+    train_dist = []
+    for seq in train_seqs:
+        # Calculate the edit distance to the most similar test sequence
+        d = min([Levenshtein.distance(seq, test_seq) for test_seq in test_seqs])
+        train_dist.append(d)
+
+    passing_idx = np.where(np.array(train_dist) >= min_edit_dist)[0]
+    logging.info(
+        f"Passing >= {min_edit_dist} edit dist cutoff: {len(passing_idx)}/{len(train_seqs)}"
+    )
+    return [train_seqs[i] for i in passing_idx], [train_labels[i] for i in passing_idx]
 
 
 def write_lcmv_subsampled_benchmark_data():

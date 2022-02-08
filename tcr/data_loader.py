@@ -89,6 +89,10 @@ class TcrABSupervisedIdxDataset(Dataset):
             seq = ft.pad_or_trunc_sequence(seq, self.max_b_len, right_align=False)
         return seq
 
+    def get_ith_sequence(self, idx: int) -> Tuple[str, str]:
+        """Get the ith TRA/TRB pair"""
+        return self.tras[idx], self.trbs[idx]
+
     def get_ith_label(self, idx: int, idx_encode: Optional[bool] = None) -> np.ndarray:
         """Get the ith label"""
         label = self.labels[idx]
@@ -565,7 +569,7 @@ class TcrFineTuneDataset(TcrSelfSupervisedDataset):
         self.skorch_mode = skorch_mode
         self.idx_encode = idx_encode
 
-    def get_ith_sequence(self, idx:int) -> Tuple[str, str]:
+    def get_ith_sequence(self, idx: int) -> Tuple[str, str]:
         """Get the ith TRA/TRB pair"""
         return self.tcr_a[idx], self.tcr_b[idx]
 
@@ -653,7 +657,9 @@ class DatasetSplit(Dataset):
     def all_sequences(self, **kwargs) -> Union[List[str], List[Tuple[str, str]]]:
         """Get all sequences"""
         if not hasattr(self.dset, "get_ith_sequence"):
-            raise NotImplementedError("Wrapped dataset must implement get_ith_sequence")
+            raise NotImplementedError(
+                f"Wrapped dataset {type(self.dset)} must implement get_ith_sequence"
+            )
         # get_ith_sequence could return a str or a tuple of two str (TRA/TRB)
         sequences = [
             self.dset.get_ith_sequence(self.idx[i], **kwargs) for i in range(len(self))

@@ -176,6 +176,9 @@ class TCRSupervisedIdxDataset(Dataset):
         if pad:
             retval = ft.pad_or_trunc_sequence(retval, self.max_len, right_align=False)
         return retval
+    
+    def get_ith_sequence(self, idx: int) -> str:
+        return self.tcrs[idx]
 
     def get_ith_label(self, idx: int) -> np.ndarray:
         retval = float(self.labels[idx])
@@ -643,7 +646,7 @@ class DatasetSplit(Dataset):
         ]
         return np.stack(labels)
 
-    def all_sequences(self, **kwargs):
+    def all_sequences(self, **kwargs) -> List[str]:
         """Get all sequences"""
         if not hasattr(self.dset, "get_ith_sequence"):
             raise NotImplementedError("Wrapped dataset must implement get_ith_sequence")

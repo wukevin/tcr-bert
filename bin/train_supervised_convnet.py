@@ -11,6 +11,7 @@ import numpy as np
 from sklearn import metrics
 
 import torch
+from torch.utils.data import Subset
 import skorch
 import skorch.helper
 import neptune
@@ -53,9 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--outdir", default=os.getcwd(), type=str, help="Output directory"
     )
     parser.add_argument(
-        "--onehot",
-        action="store_true",
-        help="Use one-hot instead of embedding",
+        "--onehot", action="store_true", help="Use one-hot instead of embedding",
     )
     parser.add_argument("--batchsize", type=int, default=512, help="Batch size")
     parser.add_argument("--lr", default=1e-3, type=float, help="Learning rate")
@@ -70,6 +69,13 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["loss", "auroc", "auprc"],
         default="auprc",
         help="Metric to monitor for checkpointing and early stopping",
+    )
+    parser.add_argument(
+        "--min-edit",
+        dest="min_edit",
+        type=int,
+        default=2,
+        help="Minimum (inclusive) edit distance between each item in training TRA/B pairs and a test TRA/B pair",
     )
     parser.add_argument(
         "--noneptune", action="store_true", help="Disable neptune logging"
@@ -136,6 +142,22 @@ def main():
     train_dset = dl.DatasetSplit(tcr_dset, "train")
     valid_dset = dl.DatasetSplit(tcr_dset, "valid")
     test_dset = dl.DatasetSplit(tcr_dset, "test")
+
+    if args.min_edit > 0:
+        train_pairs = train_dset.all_sequences()
+        train_a_seq, train_b_seq = zip(*train_pairs)
+
+        test_pairs = test_dset.all_sequences()
+        test_a_seq, test_b_seq = zip(*test_pairs)
+
+        train_a_dists = dl.min_dist_train_test_seqs(train_a_seq, test_a_seq)
+        train_b_dists = dl.min_dist_train_test_seqs(train_b_seq, test_b_seq)
+        # Combined A + B must pass cutoff
+        train_accept_idx = np.where((train_a_dists + train_b_dists) >= args.min_edit)[0]
+        logging.info(
+            f"Subset to {len(train_accept_idx)}/{len(train_dset)} sequences with >= {args.min_edit} edit distance"
+        )
+        train_dset = Subset(train_dset, indices=train_accept_idx)
 
     if args.downsample < 1.0:
         assert args.downsample > 0.0

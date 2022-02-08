@@ -103,7 +103,7 @@ def build_parser():
         "-p",
         "--pretrained",
         type=str,
-        required=True,
+        default="wukevin/tcr-bert",
         help="Pretrained network as a path or keyword",
     )
     parser.add_argument("--freeze", action="store_true", help="Freeze encoder")
@@ -158,7 +158,11 @@ def main():
     """Run the script"""
     parser = build_parser()
     args = parser.parse_args()
-    if not os.path.exists(args.pretrained):
+
+    # Post process some args
+    if not os.path.exists(args.pretrained) and not args.pretrained.startswith(
+        "wukevin/"
+    ):
         assert (
             args.pretrained in MODEL_KEYWORD_TO_HUB_PATH
         ), f"Unrecognized pretrained model spec (must be a path or keyword): {args.pretrained}"
@@ -236,8 +240,7 @@ def main():
     if not args.regression:  # Default classifcation task
         # Consider mid/pos as positive labels
         tcr_labels = np.array(
-            ["TetPos" in l or "TetMid" in l for l in lcmv_labels],
-            dtype=np.float32,
+            ["TetPos" in l or "TetMid" in l for l in lcmv_labels], dtype=np.float32,
         )
     else:
         # Use the given argument to choose column in table for regression

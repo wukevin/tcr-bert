@@ -551,10 +551,10 @@ def get_transformer_nsp_preds(
 
 
 def get_esm_embedding(
-    model: nn.Module,
-    batch_converter: Callable,
     seqs: Iterable[str],
-    device: str = "cuda:0",
+    model_key: str = "esm1b_t33_650M_UR50S",
+    batch_size: int = 1,
+    device: Optional[int] = 0,
 ) -> np.ndarray:
     """
     Get the embedding from ESM for each of the given sequences
@@ -564,17 +564,22 @@ def get_esm_embedding(
     - https://github.com/facebookresearch/esm
     - https://github.com/facebookresearch/esm/blob/master/examples/variant_prediction.ipynb
     """
+    esm_device = utils.get_device(device)
+    esm_model, esm_alphabet = torch.hub.load("facebookresearch/esm", model_key)
+    esm_model = esm_model.to(esm_device)
+    batch_converter = esm_alphabet.get_batch_converter()
+
     seqs_with_faux_labels = list(enumerate(seqs))
     labels, seqs, tokens = batch_converter(seqs_with_faux_labels)
     # Get per-base representations
     reps = []
     with torch.no_grad():
-        for batch in dl.chunkify(tokens, chunk_size=256):
+        for batch in dl.chunkify(tokens, chunk_size=batch_size):
             batch = batch.to(device)
             rep = (
-                model(batch, repr_layers=[33], return_contacts=True)["representations"][
-                    33
-                ]
+                esm_model(batch, repr_layers=[33], return_contacts=True)[
+                    "representations"
+                ][33]
                 .cpu()
                 .numpy()
             )

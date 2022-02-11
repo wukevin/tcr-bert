@@ -17,6 +17,7 @@ import pandas as pd
 
 from transformers import BertTokenizer
 
+import muscle
 import utils
 
 #
@@ -71,6 +72,7 @@ class SequenceMasker:
         self.rng = np.random.default_rng(seed=seed)
         self.unmasked = [seq] if isinstance(seq, str) else seq
         self._masked_indices = []
+        self.unmasked_msa = muscle.run_muscle(self.unmasked)
 
     @cached_property
     def masked(self) -> List[str]:
@@ -116,13 +118,10 @@ class SequenceMasker:
             return [top_k] * len(self)
         elif method == "most_common_positional":
             # Create a matrix where each row corresponds to a position
-            max_len = max([len(s) for s in self.unmasked])
-            seqs_padded = [
-                pad_or_trunc_sequence(s, max_len, right_align=False)
-                for s in self.unmasked
-            ]
-            seqs_matrix = np.stack([np.array(list(s)) for s in seqs_padded]).T
+            max_len = len(self.unmasked_msa[0])
+            seqs_matrix = np.stack([np.array(list(s)) for s in self.unmasked_msa]).T
             assert seqs_matrix.shape == (max_len, len(self))
+
             # Per-position predictions
             per_pos_most_common = []
             for i in range(max_len):

@@ -69,13 +69,16 @@ def build_parser():
         "-d",
         "--data",
         type=str,
-        required=True,
-        default="TCRdb",
+        default="LCMV",
         choices=["TCRdb", "LCMV", "PIRD"],
         help="Dataset to evaluate on",
     )
     parser.add_argument(
-        "-m", "--model", type=str, required=True, help="Model to evaluate"
+        "-m",
+        "--model",
+        type=str,
+        default="wukevin/tcr-bert-mlm-only",
+        help="Model to evaluate",
     )
     parser.add_argument(
         "-t",
@@ -94,13 +97,10 @@ def build_parser():
         "--num",
         type=int,
         default=0,
-        help="Subsample to this number of points. Default is no subsampling",
+        help="Subsample to this number of points. Default of 0 indicates no subsampling",
     )
     parser.add_argument(
-        "-b",
-        "--blosum",
-        action="store_true",
-        help="Report blosum scoring",
+        "-b", "--blosum", action="store_true", help="Report blosum scoring",
     )
     parser.add_argument("--device", type=int, default=0, help="Device to run")
     return parser
@@ -111,8 +111,8 @@ def main():
     args = build_parser().parse_args()
 
     blosum = custom_metrics.load_blosum()
-    # Load data
-    seqs = load_data(args.data, "TRA" in args.tcr, "TRB" in args.tcr)
+    # Load data and retain unique sequences
+    seqs = sorted(list(set(load_data(args.data, "TRA" in args.tcr, "TRB" in args.tcr))))
 
     # Subsample if necessary
     if args.num > 0 and args.num < len(seqs):

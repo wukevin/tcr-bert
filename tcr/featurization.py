@@ -72,7 +72,7 @@ class SequenceMasker:
         self.rng = np.random.default_rng(seed=seed)
         self.unmasked = [seq] if isinstance(seq, str) else seq
         self._masked_indices = []
-        self.unmasked_msa = muscle.run_muscle(self.unmasked)
+        self.unmasked_msa = muscle.run_muscle(self.unmasked, fast=True)
 
     @cached_property
     def masked(self) -> List[str]:

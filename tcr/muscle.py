@@ -11,7 +11,7 @@ from typing import *
 import utils
 
 
-def run_muscle(sequences: Iterable[str]) -> List[str]:
+def run_muscle(sequences: Iterable[str], fast: bool = False) -> List[str]:
     """
     Run MUSCLE on the given input sequences
     > run_muscle(["DEASV", "KKDEASV", "KKVVVSV"])
@@ -27,6 +27,8 @@ def run_muscle(sequences: Iterable[str]) -> List[str]:
         # Call MUSCLE
         muscle_output_fname = os.path.join(tempdir, "msa_output.fa")
         muscle_cmd = f"muscle -in {muscle_input_fname} -out {muscle_output_fname}"
+        if fast:
+            muscle_cmd += " -maxiters 2"
         retval = subprocess.call(
             shlex.split(muscle_cmd),
             stdout=subprocess.DEVNULL,

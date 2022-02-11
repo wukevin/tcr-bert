@@ -21,6 +21,7 @@ import logomaker
 
 import data_loader as dl
 import featurization as ft
+import muscle
 import utils
 
 
@@ -210,23 +211,7 @@ def motif_from_sequences(
     """
     if dedup:
         sequences = utils.dedup(sequences)
-    # Create a temporary directory
-    with tempfile.TemporaryDirectory() as tempdir:
-        # Write the MUSCLE input
-        logging.info(f"Running MUSCLE for MSA in {tempdir}")
-        muscle_input_fname = os.path.join(tempdir, "msa_input.fa")
-        with open(muscle_input_fname, "w") as sink:
-            sink.write("\n".join([f"> {i}\n{seq}" for i, seq in enumerate(sequences)]))
-            sink.write("\n")
-        # Call MUSCLE
-        muscle_output_fname = os.path.join(tempdir, "msa_output.fa")
-        muscle_cmd = f"muscle -in {muscle_input_fname} -out {muscle_output_fname}"
-        _retval = subprocess.call(
-            shlex.split(muscle_cmd),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        msa_seqs = list(utils.read_fasta(muscle_output_fname).values())
+    msa_seqs = muscle.run_muscle(sequences)
     msa_pwm = per_position_aa_count(msa_seqs, normalize=normalize_pwm)
     logo = logomaker.Logo(msa_pwm, **kwargs)
     return msa_pwm, logo

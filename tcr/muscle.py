@@ -14,6 +14,8 @@ import utils
 def run_muscle(sequences: Iterable[str]) -> List[str]:
     """
     Run MUSCLE on the given input sequences
+    > run_muscle(["DEASV", "KKDEASV", "KKVVVSV"])
+    ['--DEASV', 'KKDEASV', 'KKVVVSV']
     """
     with tempfile.TemporaryDirectory() as tempdir:
         # Write the MUSCLE input
@@ -42,4 +44,7 @@ def main():
 
 
 if __name__ == "__main__":
+    import doctest
+
+    doctest.testmod()
     main()

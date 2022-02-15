@@ -924,12 +924,27 @@ def load_lcmv_table(
     # all of the other metadata to each row
     dedup_rows = []
     for _i, row in table.iterrows():
-        for tra, trb in itertools.product(row["TRA"].split(";"), row["TRB"].split(";")):
+        # For this row, determine nucleotide sequences
+        tcr_nt = collect_tra_trb(row["tcr_cdr3s_nt"])
+        # The nucleotide and the protein sequences should match up correctly
+        assert len(tcr_nt["TRA"]) == len(row["TRA"].split(";"))
+        assert len(tcr_nt["TRB"]) == len(row["TRB"].split(";"))
+        tcr_aa_combos = list(
+            itertools.product(row["TRA"].split(";"), row["TRB"].split(";"))
+        )
+        tcr_nt_combos = list(itertools.product(tcr_nt["TRA"], tcr_nt["TRB"]))
+        assert len(tcr_aa_combos) == len(tcr_nt_combos)
+
+        for ((tra_aa, trb_aa), (tra_nt, trb_nt)) in zip(tcr_aa_combos, tcr_nt_combos):
             new_row = row.copy(deep=True)
-            new_row["TRA"] = tra
-            new_row["TRB"] = trb
+            # TODO check if nt translates to aa correctly
+            new_row["TRA"] = tra_aa
+            new_row["TRB"] = trb_aa
+            new_row["TRA_nt"] = tra_nt
+            new_row["TRB_nt"] = trb_nt
             dedup_rows.append(new_row)
-    dedup_table = pd.DataFrame(dedup_rows, columns=table.columns)
+
+    dedup_table = pd.DataFrame(dedup_rows)
     logging.info(f"{len(dedup_table)} entries after expanding multiple entries")
     gp33_antigen = utils.read_newline_file(
         os.path.join(os.path.dirname(fname), "lcmv_antigen.txt")
@@ -1776,13 +1791,16 @@ def on_the_fly():
     # print(table)
     # print(collections.Counter(table["patient"]).most_common())
     # print(collections.Counter(table["celltype"]).most_common())
-    df = load_clonotypes_csv_general(sys.argv[1])
-    print(df)
+    # df = load_clonotypes_csv_general(sys.argv[1])
+    # print(df)
+    lcmv = load_lcmv_table()
+    print(lcmv)
+    print(lcmv.columns)
 
 
 if __name__ == "__main__":
     import doctest
 
-    doctest.testmod()
+    # doctest.testmod()
     # main()
     on_the_fly()

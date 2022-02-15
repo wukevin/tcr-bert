@@ -1017,18 +1017,25 @@ def dedup_lcmv_table(
         "TetNeg,TetPos",
         "TetMid,TetNeg,TetPos",
     ),
+    return_nt: bool = False,
 ) -> Tuple[List[Tuple[str, str]], List[str]]:
     """
-    Return TRA and TRB pairs that are deduped and removes pairs with ambiguous labels
+    Return TRA and TRB pairs that are deduped according to their AA sequence and removes
+    pairs with ambiguous labels
 
-    This was implemented to centrally solve the issue where the LCMV table had duplicate and
+    This was implemented to centrally solve the issue where the LCMV table had duplicate rows and
     a few cases of ambiguous labels
 
     Returns two lists of equal length:
-    - List of (TRA, TRB) pairs
+    - List of (TRA, TRB) pairs either in AA form or NT form
     - List of corresponding labels (may be merged)
     """
     lcmv_ab = ["|".join(p) for p in zip(lcmv_tab["TRA"], lcmv_tab["TRB"])]
+    # Create a mapping from amino acid to NT sequence
+    lcmv_ab_to_nt = {
+        n: "|".join(p)
+        for n, p in zip(lcmv_ab, zip(lcmv_tab["TRA_nt"], lcmv_tab["TRB_nt"]))
+    }
     lcmv_ab_dedup, lcmv_labels_dedup = dedup_and_merge_labels(
         lcmv_ab, list(lcmv_tab["tetramer"])
     )
@@ -1046,7 +1053,10 @@ def dedup_lcmv_table(
     logging.info(f"LCMV deduped labels: {label_counter.most_common()}")
 
     # Resplit into pairs
-    lcmv_ab_good_split = [tuple(p.split("|")) for p in lcmv_ab_good]
+    if return_nt:
+        lcmv_ab_good_split = [tuple(lcmv_ab_to_nt[p].split("|")) for p in lcmv_ab_good]
+    else:
+        lcmv_ab_good_split = [tuple(p.split("|")) for p in lcmv_ab_good]
     return lcmv_ab_good_split, lcmv_labels_good
 
 
@@ -1796,6 +1806,8 @@ def on_the_fly():
     lcmv = load_lcmv_table()
     print(lcmv)
     print(lcmv.columns)
+    seqs, labels = dedup_lcmv_table(lcmv, return_nt=True)
+    print(seqs[:3])
 
 
 if __name__ == "__main__":

@@ -74,7 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--min-edit",
         dest="min_edit",
         type=int,
-        default=2,
+        default=3,
         help="Minimum (inclusive) edit distance between each item in training TRA/B pairs and a test TRA/B pair",
     )
     parser.add_argument(
@@ -145,15 +145,10 @@ def main():
 
     if args.min_edit > 0:
         train_pairs = train_dset.all_sequences()
-        train_a_seq, train_b_seq = zip(*train_pairs)
-
         test_pairs = test_dset.all_sequences()
-        test_a_seq, test_b_seq = zip(*test_pairs)
-
-        train_a_dists = dl.min_dist_train_test_seqs(train_a_seq, test_a_seq)
-        train_b_dists = dl.min_dist_train_test_seqs(train_b_seq, test_b_seq)
+        train_dists = dl.min_dist_train_test_pairs(train_pairs, test_pairs)
         # Combined A + B must pass cutoff
-        train_accept_idx = np.where((train_a_dists + train_b_dists) >= args.min_edit)[0]
+        train_accept_idx = np.where(train_dists >= args.min_edit)[0]
         logging.info(
             f"Subset to {len(train_accept_idx)}/{len(train_dset)} sequences with >= {args.min_edit} edit distance"
         )

@@ -927,8 +927,6 @@ def load_lcmv_table(
         # For this row, determine nucleotide sequences
         tcr_nt = collect_tra_trb(row["tcr_cdr3s_nt"])
         # The nucleotide and the protein sequences should match up correctly
-        assert len(tcr_nt["TRA"]) == len(row["TRA"].split(";"))
-        assert len(tcr_nt["TRB"]) == len(row["TRB"].split(";"))
         tcr_aa_combos = list(
             itertools.product(row["TRA"].split(";"), row["TRB"].split(";"))
         )
@@ -937,7 +935,9 @@ def load_lcmv_table(
 
         for ((tra_aa, trb_aa), (tra_nt, trb_nt)) in zip(tcr_aa_combos, tcr_nt_combos):
             new_row = row.copy(deep=True)
-            # TODO check if nt translates to aa correctly
+            # Check that nucleotide and protein sequences match up
+            assert utils.nt2aa(tra_nt) == tra_aa
+            assert utils.nt2aa(trb_nt) == trb_aa
             new_row["TRA"] = tra_aa
             new_row["TRB"] = trb_aa
             new_row["TRA_nt"] = tra_nt

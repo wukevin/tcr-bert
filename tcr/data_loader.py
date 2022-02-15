@@ -1701,6 +1701,23 @@ def chunkify_dict(
     return retval
 
 
+def min_dist_train_test_pairs(
+    train_pairs: List[Tuple[str, str]], test_pairs: List[Tuple[str, str]]
+) -> np.ndarray:
+    """
+    For each training pair, find the minimum edit distance to any test pair
+    summed across the two elements in the pair
+    """
+    retval = []
+    test_x, test_y = zip(*test_pairs)
+    for x, y in train_pairs:
+        x_dists = np.array([Levenshtein.distance(x, item) for item in test_x])
+        y_dists = np.array([Levenshtein.distance(y, item) for item in test_y])
+        d = np.min(x_dists + y_dists)
+        retval.append(d)
+    return np.array(retval)
+
+
 def min_dist_train_test_seqs(
     train_seqs: Sequence[str], test_seqs: Collection[str]
 ) -> np.ndarray:

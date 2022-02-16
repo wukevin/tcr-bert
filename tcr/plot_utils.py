@@ -118,8 +118,7 @@ def plot_auprc(
     else:
         ax.plot(recall, precision, **kwargs)
     ax.set(
-        xlabel="Recall",
-        ylabel="Precision",
+        xlabel="Recall", ylabel="Precision",
     )
     if fig is not None:
         ax.set(title=f"{title_prefix} (n={len(truth)}, AUPRC={average_precision:.3f})")
@@ -225,6 +224,7 @@ def plot_anndata_rep(
     direct_label: bool = True,
     adjust: bool = False,
     ax_tick: bool = False,
+    legend_size: Optional[int] = None,
     figsize: Tuple[float, float] = (6.4, 4.8),
     fname: str = "",
     **kwargs,
@@ -283,18 +283,16 @@ def plot_anndata_rep(
         for i, val in enumerate(unique_val):
             p = mpatches.Patch(color=cmap(i), label=val)
             patches.append(p)
-        ax.legend(handles=patches)
+        ax.legend(handles=patches, prop={"size": legend_size})
 
     rep_str = representation_axes_label if representation_axes_label else representation
     if not swap_axes:
         ax.set(
-            xlabel=f"{rep_str.upper()}1",
-            ylabel=f"{rep_str.upper()}2",
+            xlabel=f"{rep_str.upper()}1", ylabel=f"{rep_str.upper()}2",
         )
     else:
         ax.set(
-            xlabel=f"{rep_str.upper()}2",
-            ylabel=f"{rep_str.upper()}1",
+            xlabel=f"{rep_str.upper()}2", ylabel=f"{rep_str.upper()}1",
         )
     ax.set(**kwargs)
     if not ax_tick:

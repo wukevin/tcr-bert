@@ -1,0 +1,22 @@
+﻿residue,name,type
+R,Arginine,Positive
+H,Histidine,Positive
+K,Lysine,Positive
+D,Aspartic acid,Negative
+E,Glutamic acid,Negative
+S,Serine,Polar uncharged
+T,Threonine,Polar uncharged
+N,Asparagine,Polar uncharged
+Q,Glutamine,Polar uncharged
+C,Cysteine,Special
+U,Selenocysteine,Special
+G,Glycine,Special
+P,Proline,Special
+A,Alanine,Hydrophobic
+V,Valine,Hydrophobic
+I,Isoleucine,Hydrophobic
+L,Leucine,Hydrophobic
+M,Methionine,Hydrophobic
+F,Phenylalanine,Hydrophobic
+Y,Tyrosine,Hydrophobic
+W,Tryptophan,Hydrophobic

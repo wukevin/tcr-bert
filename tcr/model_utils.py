@@ -397,7 +397,8 @@ def get_transformer_embeddings(
 ) -> np.ndarray:
     """
     Get the embeddings for the given sequences from the given layers
-    Layers should be given as negative integers
+    Layers should be given as negative integers, where -1 indicates the last
+    representation, -2 second to last, etc.
     Returns a matrix of num_seqs x (hidden_dim * len(layers))
     Methods:
     - cls:  value of initial CLS token
@@ -448,7 +449,7 @@ def get_transformer_embeddings(
             if method == "pool":
                 embeddings.append(x.pooler_output.cpu().numpy().astype(np.float64))
                 continue
-            # x.hidden_states contains hidden states, num_hidden_layers + 1
+            # x.hidden_states contains hidden states, num_hidden_layers + 1 (e.g. 13)
             # Each hidden state is (batch, seq_len, hidden_size)
             # x.hidden_states[-1] == x.last_hidden_state
             # x.attentions contains attention, num_hidden_layers

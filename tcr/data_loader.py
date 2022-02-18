@@ -30,6 +30,9 @@ import utils
 LOCAL_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 assert os.path.isdir(LOCAL_DATA_DIR)
 
+EXTERNAL_EVAL_DIR = os.path.join(os.path.dirname(LOCAL_DATA_DIR), "external_eval")
+assert os.path.join(EXTERNAL_EVAL_DIR)
+
 # Names of datasets
 DATASET_NAMES = {"LCMV", "VDJdb", "PIRD", "TCRdb"}
 
@@ -1023,12 +1026,12 @@ def load_lcmv_table(
             [row["tcr_cdr3s_aa"], *a_vdj, *b_vdj],
             index=[
                 "tcr_cdr3s_aa",
-                "a_v_gene",
-                "a_d_gene",
-                "a_j_gene",
-                "b_v_gene",
-                "b_d_gene",
-                "b_j_gene",
+                "v_a_gene",
+                "d_a_gene",
+                "j_a_gene",
+                "v_b_gene",
+                "d_b_gene",
+                "j_b_gene",
             ],
         )
         vdj_df_reorder_rows.append(s)
@@ -1107,9 +1110,9 @@ def dedup_lcmv_table(
     logging.info(f"LCMV deduped labels: {label_counter.most_common()}")
 
     # Resplit into pairs
-    if return_mode == "aa":
+    if return_mode == "nt":
         lcmv_ab_good_split = [tuple(lcmv_ab_to_nt[p].split("|")) for p in lcmv_ab_good]
-    elif return_mode == "nt":
+    elif return_mode == "aa":
         lcmv_ab_good_split = [tuple(p.split("|")) for p in lcmv_ab_good]
     elif return_mode == "full":
         lcmv_ab_good_split = pd.DataFrame([lcmv_ab_to_full[p] for p in lcmv_ab_good])
@@ -1861,7 +1864,7 @@ def write_lcmv_tcrdist_input(fname: str = "temp.tsv"):
     Output is written to fname
     """
     lcmv = load_lcmv_table()
-    seqs, labels = dedup_lcmv_table(lcmv, return_nt=True)
+    seqs, labels = dedup_lcmv_table(lcmv, return_mode="nt")
     tra, trb = zip(*seqs)
     df = pd.DataFrame(
         {
@@ -1875,6 +1878,55 @@ def write_lcmv_tcrdist_input(fname: str = "temp.tsv"):
     df.to_csv(fname, sep="\t", index=False)
 
 
+def write_lcmv_tcrdist3_input(
+    fname: str = os.path.join(EXTERNAL_EVAL_DIR, "lcmv_test_tcrdist3.tsv"),
+    dual_chain: bool = True,
+):
+    """
+    Write the LCMV data in a format for TCRDist, which expects 3 columns per chain
+    cdr3_b_aa   v_b_gene    j_b_gene    # example for b chain
+    v/j genes expect the *01 suffix
+
+    Important processing:
+    if a v/j gene has a "+" indicating its two or more genes, we take the last one
+    """
+
+    def sanitize_vj(s: str) -> str:
+        if "+" in s:
+            s = s.split("+")[-1]
+        if not s.endswith("*01"):
+            s += "*01"
+        return s
+
+    lcmv = load_lcmv_table()
+    df, labels = dedup_lcmv_table(lcmv, return_mode="full")
+    labels_sub = split_arr(labels, "test")
+    df_sub = split_arr(df, "test")  # We only evaluate test set clustering
+    if dual_chain:
+        retval = df_sub.loc[
+            :, ["TRA", "v_a_gene", "j_a_gene", "TRB", "v_b_gene", "j_b_gene"]
+        ]
+        retval.columns = [
+            "cdr3_a_aa",
+            "v_a_gene",
+            "j_a_gene",
+            "cdr3_b_aa",
+            "v_b_gene",
+            "j_b_gene",
+        ]
+    else:
+        # Single chain
+        retval = df_sub.loc[:, ["TRB", "v_b_gene", "j_b_gene"]]
+        retval.columns = ["cdr3_b_aa", "v_b_gene", "j_b_gene"]
+    for colname in ["v_a_gene", "j_a_gene", "v_b_gene", "j_b_gene"]:
+        if colname in retval.columns:
+            retval[colname] = [sanitize_vj(s) for s in retval[colname]]
+    # Attach the "truth" column
+    retval["gp33_binding"] = ["TetPos" in l or "TetMid" in l for l in labels_sub]
+    retval.to_csv(fname, sep="\t", index=False)
+    return retval
+
+
 def on_the_fly():
     """On the fly testing"""
     # table = load_longitudinal_covid_trbs()
@@ -1883,10 +1935,7 @@ def on_the_fly():
     # print(collections.Counter(table["celltype"]).most_common())
     # df = load_clonotypes_csv_general(sys.argv[1])
     # print(df)
-    # write_lcmv_tcrdist_input()
-    table = load_lcmv_table()
-    seqs, labels = dedup_lcmv_table(table, return_mode="full")
-    print(seqs)
+    print(write_lcmv_tcrdist3_input())
 
 
 if __name__ == "__main__":

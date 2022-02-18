@@ -1068,8 +1068,8 @@ def dedup_lcmv_table(
         "TetNeg,TetPos",
         "TetMid,TetNeg,TetPos",
     ),
-    return_nt: bool = False,
-) -> Tuple[List[Tuple[str, str]], List[str]]:
+    return_mode: Literal["nt", "aa", "full"] = "aa",
+) -> Tuple[Union[List[Tuple[str, str]], pd.DataFrame], List[str]]:
     """
     Return TRA and TRB pairs that are deduped according to their AA sequence and removes
     pairs with ambiguous labels
@@ -1077,8 +1077,8 @@ def dedup_lcmv_table(
     This was implemented to centrally solve the issue where the LCMV table had duplicate rows and
     a few cases of ambiguous labels
 
-    Returns two lists of equal length:
-    - List of (TRA, TRB) pairs either in AA form or NT form
+    Returns two items of equal length:
+    - List of (TRA, TRB) pairs either in AA form or NT form, or a subset of the full dataframe
     - List of corresponding labels (may be merged)
     """
     lcmv_ab = ["|".join(p) for p in zip(lcmv_tab["TRA"], lcmv_tab["TRB"])]
@@ -1086,6 +1086,9 @@ def dedup_lcmv_table(
     lcmv_ab_to_nt = {
         n: "|".join(p)
         for n, p in zip(lcmv_ab, zip(lcmv_tab["TRA_nt"], lcmv_tab["TRB_nt"]))
+    }
+    lcmv_ab_to_full = {
+        "|".join([row["TRA"], row["TRB"]]): row for i, row in lcmv_tab.iterrows()
     }
     lcmv_ab_dedup, lcmv_labels_dedup = dedup_and_merge_labels(
         lcmv_ab, list(lcmv_tab["tetramer"])
@@ -1104,10 +1107,14 @@ def dedup_lcmv_table(
     logging.info(f"LCMV deduped labels: {label_counter.most_common()}")
 
     # Resplit into pairs
-    if return_nt:
+    if return_mode == "aa":
         lcmv_ab_good_split = [tuple(lcmv_ab_to_nt[p].split("|")) for p in lcmv_ab_good]
-    else:
+    elif return_mode == "nt":
         lcmv_ab_good_split = [tuple(p.split("|")) for p in lcmv_ab_good]
+    elif return_mode == "full":
+        lcmv_ab_good_split = pd.DataFrame([lcmv_ab_to_full[p] for p in lcmv_ab_good])
+    else:
+        raise ValueError(f"Unrecognized return mode: {return_mode}")
     return lcmv_ab_good_split, lcmv_labels_good
 
 
@@ -1878,7 +1885,8 @@ def on_the_fly():
     # print(df)
     # write_lcmv_tcrdist_input()
     table = load_lcmv_table()
-    print(table)
+    seqs, labels = dedup_lcmv_table(table, return_mode="full")
+    print(seqs)
 
 
 if __name__ == "__main__":

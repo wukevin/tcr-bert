@@ -854,20 +854,24 @@ def shuffle_indices_train_valid_test(
 
 
 def split_arr(
-    arr: Union[np.ndarray, pd.DataFrame],
+    arr: Union[np.ndarray, pd.DataFrame, list, tuple],
     split: Literal["train", "valid", "test"],
     **kwargs,
-) -> np.ndarray:
+) -> Union[np.ndarray, pd.DataFrame, list]:
     """
     Randomly split the array into the given split
     kwargs are fed to shuffle_indices_train_valid_test
     """
     split_to_idx = {"train": 0, "valid": 1, "test": 2}
     assert split in split_to_idx, f"Unrecognized split: {split}"
-    indices = np.arange(arr.shape[0])
+
+    n = len(arr) if isinstance(arr, (list, tuple)) else arr.shape[0]
+    indices = np.arange(n)
     keep_idx = shuffle_indices_train_valid_test(indices, **kwargs)[split_to_idx[split]]
     if isinstance(arr, pd.DataFrame):
         return arr.iloc[keep_idx]
+    if isinstance(arr, (list, tuple)):
+        return [arr[i] for i in keep_idx]
     return arr[keep_idx]
 
 
@@ -899,6 +903,38 @@ def sample_unlabelled_tcrdb_trb(
     retval = [tcrdb.iloc[i]["AASeq"] for i in idx]
     if blacklist:  # No overlap
         assert not set(retval).intersection(blacklist)
+    return retval
+
+
+def load_lcmv_vdj(
+    vdj_fname: str = os.path.join(LOCAL_DATA_DIR, "lcmv_tcr_vdj_unsplit.txt.gz")
+) -> Dict[str, Dict[str, Dict[str, Tuple[str, str, str]]]]:
+    """
+    Load the vdj table and return it in a 3-level dictionary
+    identifier -> TRA/TRB -> cdr3 sequence -> (v, d, j)
+    {
+        tcr_cdr3s_aa_identifier : {
+            "TRA": {
+                cdr3_sequence: (v, d, j),
+                ...
+            }
+            "TRB": ...
+        }
+    }
+    v d or j may be None if not provided
+    """
+    check_none: Callable[
+        [str], Union[str, None]
+    ] = lambda x: None if x.lower() == "none" or not x else x
+    df = pd.read_csv(vdj_fname, delimiter="\t", low_memory=False)
+    retval = collections.defaultdict(lambda: {"TRA": dict(), "TRB": dict()})
+    for i, row in df.iterrows():
+        k = row["tcr_cdr3s_aa"]
+        retval[k][row["chain"]][row["cdr3"]] = (
+            check_none(row["v_gene"]),
+            check_none(row["d_gene"]),
+            check_none(row["j_gene"]),
+        )
     return retval
 
 
@@ -978,23 +1014,38 @@ def load_lcmv_table(
     metadata_df_reorder.index = dedup_table.index
 
     # Load in VDJ annotations and match it up with prior table
-    vdj_df = pd.read_csv(vdj_fname, delimiter="\t", low_memory=False)
-    vdj_ab_pairs = list(vdj_df["tcr_cdr3s_aa"])
-    idx_map = np.array([vdj_ab_pairs.index(p) for p in table_ab_pairs])
-    vdj_df_reorder = vdj_df.iloc[idx_map]
+    vdj_mapping = load_lcmv_vdj(vdj_fname)  # 3 layer dict
+    vdj_df_reorder_rows = []
+    for i, row in dedup_table.iterrows():
+        b_vdj = vdj_mapping[row["tcr_cdr3s_aa"]]["TRB"][row["TRB"]]
+        a_vdj = vdj_mapping[row["tcr_cdr3s_aa"]]["TRA"][row["TRA"]]
+        s = pd.Series(
+            [row["tcr_cdr3s_aa"], *a_vdj, *b_vdj],
+            index=[
+                "tcr_cdr3s_aa",
+                "a_v_gene",
+                "a_d_gene",
+                "a_j_gene",
+                "b_v_gene",
+                "b_d_gene",
+                "b_j_gene",
+            ],
+        )
+        vdj_df_reorder_rows.append(s)
+    vdj_df_reorder = pd.DataFrame(vdj_df_reorder_rows)
     assert all(
         [
             i == j
             for i, j in zip(vdj_df_reorder["tcr_cdr3s_aa"], dedup_table["tcr_cdr3s_aa"])
         ]
     )
-    vdj_df_reorder = vdj_df_reorder.drop(
-        columns=[
-            col
-            for col in vdj_df_reorder.columns
-            if col in dedup_table.columns or col in metadata_df_reorder.columns
-        ]
-    )
+    vdj_df_drop_cols = [
+        col
+        for col in vdj_df_reorder.columns
+        if col in dedup_table.columns or col in metadata_df_reorder.columns
+    ]
+    logging.debug(f"Dropping cols from VDJ info: {vdj_df_drop_cols}")
+    vdj_df_reorder = vdj_df_reorder.drop(columns=vdj_df_drop_cols)
     vdj_df_reorder.index = dedup_table.index
     retval = pd.concat([dedup_table, metadata_df_reorder, vdj_df_reorder], axis=1)
 
@@ -1074,13 +1125,14 @@ def dedup_lcmv_table_trb_only(
     trb_dedup, labels_dedup = dedup_and_merge_labels(
         list(lcmv_tab["TRB"]), list(lcmv_tab["tetramer"])
     )
+    assert utils.is_all_unique(trb_dedup)
     all_label_counter = collections.Counter(labels_dedup)
     logging.info(f"Combined labels {all_label_counter.most_common()}")
     logging.info(f"Filtering out labels {blacklist_label_combos}")
     good_label_idx = [
         i for i, l in enumerate(labels_dedup) if l not in blacklist_label_combos
     ]
-    logging.info(f"Retaining {len(good_label_idx)} pairs with unambiguous labels")
+    logging.info(f"Retaining {len(good_label_idx)} sequences with unambiguous labels")
 
     trb_good = [trb_dedup[i] for i in good_label_idx]
     labels_good = [labels_dedup[i] for i in good_label_idx]
@@ -1795,6 +1847,27 @@ def write_lcmv_subsampled_benchmark_data():
     return
 
 
+def write_lcmv_tcrdist_input(fname: str = "temp.tsv"):
+    """
+    Write the LCMV data in format for TCRDist, which expects a tsv file with the columns:
+    id  epitope subject a_nucseq    b_nucseq    a_quals b_quals
+    Output is written to fname
+    """
+    lcmv = load_lcmv_table()
+    seqs, labels = dedup_lcmv_table(lcmv, return_nt=True)
+    tra, trb = zip(*seqs)
+    df = pd.DataFrame(
+        {
+            "id": np.arange(len(seqs)),
+            "epitope": ["foo"] * len(seqs),
+            "subject": ["bar"] * len(seqs),
+            "a_nucseq": tra,
+            "b_nucseq": trb,
+        }
+    )
+    df.to_csv(fname, sep="\t", index=False)
+
+
 def on_the_fly():
     """On the fly testing"""
     # table = load_longitudinal_covid_trbs()
@@ -1803,11 +1876,9 @@ def on_the_fly():
     # print(collections.Counter(table["celltype"]).most_common())
     # df = load_clonotypes_csv_general(sys.argv[1])
     # print(df)
-    lcmv = load_lcmv_table()
-    print(lcmv)
-    print(lcmv.columns)
-    seqs, labels = dedup_lcmv_table(lcmv, return_nt=True)
-    print(seqs[:3])
+    # write_lcmv_tcrdist_input()
+    table = load_lcmv_table()
+    print(table)
 
 
 if __name__ == "__main__":

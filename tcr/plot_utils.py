@@ -267,7 +267,7 @@ def plot_anndata_rep(
                 v,
                 horizontalalignment="center",
                 verticalalignment="center",
-                size=14,
+                size=legend_size,
             )
             texts.append(t)
         if adjust:

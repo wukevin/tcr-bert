@@ -8,6 +8,7 @@ from anndata import AnnData
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import sklearn.metrics as metrics
+from scipy import stats
 from adjustText import adjust_text
 
 import featurization as ft
@@ -301,3 +302,81 @@ def plot_anndata_rep(
     if fname:
         fig.savefig(fname, bbox_inches="tight")
     return fig
+
+
+def plot_perf_over_params(
+    bot_dfs: Dict[str, pd.DataFrame],
+    top_dfs: Iterable[pd.DataFrame],
+    metric: str,
+    bot_label="GLIPH global covergence distance cutoff",
+    top_label="TCR-BERT Leiden resolution",
+    bot_reverse: bool = False,
+    top_reverse: bool = True,
+    fname: Optional[str] = None,
+    **kwargs,
+):
+    """
+    Dual-axis (on x) line plots comparing performance (yaxis) across several
+    parameter configs (shown on x). Originally written for comparing TCR-BERT
+    and GLIPH performance on clustering.
+    """
+
+    def is_logarithmic(vals) -> bool:
+        """Returns true of the vals are probably logarithmic"""
+        lin_r = stats.linregress(np.arange(len(vals)), vals).rvalue
+        log_r = stats.linregress(np.arange(len(vals)), np.log(vals)).rvalue
+        return log_r > lin_r
+
+    # Create a mapping from plotted metrics to readable label
+    label_readable = {
+        "perc_clustered": "Percent clustered",
+        "perc_correct": "Percent correctly clustered",
+    }
+    markers = ["*", "<", "H"]
+
+    fig, ax1 = plt.subplots(dpi=300)
+    # Plot the bottom axis
+    for i, (k, df) in enumerate(bot_dfs.items()):
+        ax1.plot(
+            df.index,
+            df[metric],
+            marker=markers[i],
+            color="tab:orange",
+            label=k,
+            alpha=0.6,
+        )
+        if is_logarithmic(df.index):
+            ax1.set_xscale("log", base=2)
+    if len(bot_dfs) > 1:
+        ax1.legend()
+
+    ax1.set_xlabel(bot_label, color="tab:orange")
+    ax1.tick_params(axis="x", colors="tab:orange")
+    if bot_reverse:
+        ax1.invert_xaxis()
+    ax1.set(**kwargs, ylabel=label_readable[metric])  # Set axes properties
+
+    ax2 = ax1.twiny()
+    for i, (k, df) in enumerate(top_dfs.items()):
+        ax2.plot(
+            df.index,
+            df[metric],
+            label=k,
+            color="tab:blue",
+            marker=markers[i],
+            alpha=0.6,
+        )
+        if is_logarithmic(df.index):
+            ax2.set_xscale("log", base=2)
+    if len(top_dfs) > 1:
+        ax2.legend()
+
+    ax2.set_xlabel(top_label, color="tab:blue")
+    ax2.tick_params(axis="x", colors="tab:blue")
+    if top_reverse:
+        ax2.invert_xaxis()
+
+    if fname is not None:
+        fig.savefig(fname, bbox_inches="tight")
+    return fig
+

@@ -313,6 +313,7 @@ def plot_perf_over_params(
     bot_reverse: bool = False,
     top_reverse: bool = True,
     fname: Optional[str] = None,
+    rand_line: Optional[float] = None,
     **kwargs,
 ):
     """
@@ -375,6 +376,12 @@ def plot_perf_over_params(
     ax2.tick_params(axis="x", colors="tab:blue")
     if top_reverse:
         ax2.invert_xaxis()
+
+    # Plot a random line
+    if rand_line:
+        ax2.axhline(
+            rand_line, label="Random", color="tab:grey", alpha=0.5, linestyle="--"
+        )
 
     if fname is not None:
         fig.savefig(fname, bbox_inches="tight")

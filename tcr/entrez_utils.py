@@ -20,14 +20,7 @@ MOUSE_TRB_BLASTDB = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "data/mus_musculus_trb_blastdb/mus_musculus_tcr_beta_chains_071721.fasta",
 )
-assert os.path.isfile(MOUSE_TRB_BLASTDB)
-
-HUMAN_TRB_BLASTDB = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    "data/homo_sapiens_trb_blastdb/human-trbs-081221.fasta",
-)
-assert os.path.isfile(HUMAN_TRB_BLASTDB)
-
+assert os.path.isfile(MOUSE_TRB_BLASTDB), f"Cannot find {MOUSE_TRB_BLASTDB}"
 
 def run_blast(
     seqs: Iterable[str], db: str, e_val: float = 0.01, fetch_hit_metadata: bool = True

@@ -48,7 +48,7 @@ def build_parser():
         help="Path to transformer or huggingface model identifier",
     )
     parser.add_argument(
-        "-l", "--layer", type=int, default=-5, help="Transformer layer to use"
+        "-l", "--layer", type=int, default=-1, help="Transformer layer to use"
     )
     parser.add_argument(
         "-r", "--res", type=float, default=32, help="Leiden clustering resolution"

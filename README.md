@@ -104,9 +104,12 @@ INFO:root:Read in 1055 unique valid TCRs from example_files/glanville_np177_trai
 Some weights of the model checkpoint at wukevin/tcr-bert were not used when initializing BertModel: ['bert.pooler.dense.weight', 'bert.pooler.dense.bias']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-/home/wukevin/miniconda3/envs/tcr/lib/python3.9/site-packages/anndata/_core/anndata.py:119: ImplicitModificationWarning: Transforming to str index.
+/home/wukevin/miniconda3/envs/tcrbert/lib/python3.9/site-packages/anndata/_core/anndata.py:119: ImplicitModificationWarning: Transforming to str index.
   warnings.warn("Transforming to str index.", ImplicitModificationWarning)
-INFO:root:Writing 618 TCR clusters to: temp.csv
+INFO:root:Writing 622 TCR clusters to: temp.csv
+❯ md5sum temp.csv example_files/glanville_np177_training_patient_clustered.csv
+dd9689e632dae8ee38fc74ae9f154061  temp.csv
+dd9689e632dae8ee38fc74ae9f154061  example_files/glanville_np177_training_patient_clustered.csv
 ```
 
 In the above, we use the `-r` parameter to adjust the resolution of clustering, which affects the granularity of the clusters. Larger values corresponds to more granular clusters, whereas smaller values create coarser (more inclusive) clusters. The `-g` parameter is used to specify the index of the GPU to run on. This example should finish in less than 5 minutes on a machine with or without GPU availability.

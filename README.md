@@ -1,6 +1,6 @@
 # TCR-BERT
 
-TCR-BERT is a large language model trained on T-cell receptor sequences, built using a lightly modified BERT architecture with tweaked pre-training objectives. Please see our [pre-print](https://www.biorxiv.org/content/10.1101/2021.11.18.469186v1) for more information. 
+TCR-BERT is a large language model trained on T-cell receptor sequences, built using a lightly modified BERT architecture with tweaked pre-training objectives. Please see our [pre-print](https://www.biorxiv.org/content/10.1101/2021.11.18.469186v1) for more information.
 
 ## Installation
 
@@ -16,12 +16,12 @@ Afterwards, use `conda activate tcrbert` before running any commands described b
 
 ### TCR-BERT (pretrained)
 
-TCR-BERT is available through the HuggingFace model hub (https://huggingface.co/models). We make several versions of our model available (see manuscript for full details regarding each model's training and usage):
+TCR-BERT is available through the HuggingFace model hub (<https://huggingface.co/models>). We make several versions of our model available (see manuscript for full details regarding each model's training and usage):
 
-* Pre-trained on masked amino acid & antigen binding classification: https://huggingface.co/wukevin/tcr-bert
-    * This is the model to use if you are interested in analzying TRB sequences
-* Pre-trained on masked amino acid: https://huggingface.co/wukevin/tcr-bert-mlm-only
-    * This is the model to use if you are interested in analying both TRA and TRB sequences
+* Pre-trained on masked amino acid & antigen binding classification: <https://huggingface.co/wukevin/tcr-bert>
+  * This is the model to use if you are interested in analzying TRB sequences
+* Pre-trained on masked amino acid: <https://huggingface.co/wukevin/tcr-bert-mlm-only>
+  * This is the model to use if you are interested in analying both TRA and TRB sequences
 
 These models can be downloaded automatically by using Python code like the following:
 
@@ -96,7 +96,7 @@ TCR-BERT can be used to embed sequences. These embeddings can then be used to cl
 * Input file: File containing list of sequences. This could be formatted as one sequence per line, or as a tab-delimited file with the sequence as the first column.
 * Output file: File containing, on each line, a comma-separated list of sequences. Each line corresponds to one group of sequences predicted to share antigen specificity.
 
-An example of its usage is below; this snippet should take under a minute to run (assuming the TCR-BERT model is downloaded already), and its expected output is provided at `example_files/glanville_np177_training_patient_clustered.csv` for reference. 
+An example of its usage is below; this snippet should take under a minute to run (assuming the TCR-BERT model is downloaded already), and its expected output is provided at `example_files/glanville_np177_training_patient_clustered.csv` for reference.
 
 ```bash
 ❯ python bin/embed_and_cluster.py example_files/glanville_np177_training_patient.tsv temp.csv -r 128 -g 0
@@ -152,14 +152,18 @@ python bin/finetune_transformer_single.py -p wukevin/tcr-bert --data data/pp65.t
 ```
 
 In the above, the `-p` option controls the pretrained model being used as a starting point, `--data` denotes the data file being used, `-s` indicates that finetuning for TRBs (controls how input files are read), and `-o` indicates the output folder for the resulting model and logs. The data file indicated above contains a sample input of sequences from the PIRD and VDJdb databases that bind and do not bind the pp65 antigen. (Note: this resulting model and approach isn't used in our manuscript, and is simply provided here for completeness.)
+
 ## Example Jupyter notebooks
 
 We provide several Jupyter notebooks that demonstrate more interactive, in-depth analysis using TCR-BERT. These notebooks also serve to replicate some of the results we present in our manuscript. Under the `jupyter` directory, please find:
 
+* `antigen_cv.ipynb` containing code and results for running antigen cross validation analyses.
+* `lcmv_test_set_comparison.ipynb` containing classifier performance on the held out LCMV test set.
+* `transformers_lcmv_clustering.ipynb` containing clustering performance on the held out LCMV test set (for TCRDist3 reference, see the corresponding notebook under the `external_eval` folder.).
 * `transformers_glanville_classifier_and_clustering.ipynb` containing classification analysis and clustering analysis using the Glanville dataset
 * `transformers_finetuned_tcr_engineering_mlm_gen.ipynb` containing code used for generating, analyzing, and visualizing novel TCR sequences binding to murine GP33.
 
-To run these, you must first install jupyter notebook support under the `tcrbert` conda environment (these packages are not included by default to save space). You can do this by running `conda activate tcrbert && conda install -c conda-forge notebook`. 
+To run these, you must first install jupyter notebook support under the `tcrbert` conda environment (these packages are not included by default to save space). You can do this by running `conda activate tcrbert && conda install -c conda-forge notebook`.
 
 ## Selected References
 

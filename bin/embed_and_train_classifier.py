@@ -40,10 +40,11 @@ def get_model(keyword: str, n_components: int) -> BaseEstimator:
         cls = models.ModelOnPCA(
             SVC, n_components=n_components, probability=True, kernel="rbf"
         )
+    elif keyword == "svm":
+        cls = SVC(probability=True, kernel="rbf", random_state=6489)
     elif keyword == "lr":
         cls = LogisticRegression(penalty="l2", solver="liblinear")
     elif keyword == "gpc":
-        # Gaussian Process Classifier
         cls = GaussianProcessClassifier()
     else:
         raise ValueError(f"Unrecognized classifier: {keyword}")
@@ -90,15 +91,19 @@ def build_parser() -> argparse.ArgumentParser:
         "-c",
         "--classifier",
         type=str,
-        choices=["pcasvm", "lr", "gpc"],
-        default="pcasvm",
+        choices=["svm", "pcasvm", "lr", "gpc"],
+        default="svm",
         help="Classifier to train",
     )
     parser.add_argument(
-        "-l", "--layer", type=int, default=-5, help="Transformer layer to use"
+        "-l", "--layer", type=int, default=-1, help="Transformer layer to use"
     )
     parser.add_argument(
-        "-n", "--numpcs", type=int, default=50, help="Number of PCs to use"
+        "-n",
+        "--numpcs",
+        type=int,
+        default=50,
+        help="Number of PCs to use uf using pcasvm",
     )
     parser.add_argument(
         "-g",

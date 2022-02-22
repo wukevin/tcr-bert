@@ -123,22 +123,21 @@ The most straightforward, data-efficient way to use TCR-BERT to perform TRB-anti
 An example of its usage is below, along with expected output:
 
 ```bash
-> python bin/embed_and_train_classifier.py example_files/glanville_np177_training_patient.tsv outdir --test example_files/glanville_np177_testing_patients.tsv
-INFO:root:Git commit: 4652c66724ea336b95b61a0cb6401013e29218ed
+❯ python bin/embed_and_train_classifier.py example_files/glanville_np177_training_patient.tsv temp -t example_files/glanville_np177_testing_patients.tsv -c svm -g 0
+INFO:root:Git commit: cfb7dd4451672683c5248b13cb5d98fe470b9f51
 INFO:root:Reading in test set examples
 INFO:root:Training: 1055
 INFO:root:Testing:  227
-WARNING:root:Defaulting to CPU
 Some weights of the model checkpoint at wukevin/tcr-bert were not used when initializing BertModel: ['bert.pooler.dense.weight', 'bert.pooler.dense.bias']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-WARNING:root:Defaulting to CPU
 Some weights of the model checkpoint at wukevin/tcr-bert were not used when initializing BertModel: ['bert.pooler.dense.weight', 'bert.pooler.dense.bias']
 - This IS expected if you are initializing BertModel from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing BertModel from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-INFO:root:Test AUROC: 0.6026
-INFO:root:Test AUPRC: 0.3521
-INFO:root:Writing PCA-SVM model to outdir/pcasvm.sklearn
+INFO:root:Classifier SVC(probability=True, random_state=6489)
+INFO:root:Test AUROC: 0.6240
+INFO:root:Test AUPRC: 0.4047
+INFO:root:Writing svm model to temp/svm.sklearn
 ```
 
 These example files contain TRB sequences that are known to bind to the NP177 influenza A antigen, courtesy of a dataset published by Glanville et al., as well as a set of randomly selected endogenous human TRBs sampled from TCRdb (as a background negative set). Since we split this data by patient (rather than using default of random splits), we explicitly provide a separate set of test examples using the `--test` argument.

@@ -50,7 +50,7 @@ Please see our example Jupyter notebooks for more usage examples with this API.
 
 ### Fine-tuned TCR-BERT
 
-We fine-tune our TCR-BERT model to predict LCMV GP33 antigen binding given TRA/TRB amino acid pairs (see manuscript for additional details). This uses an architecture augmented from those natively supported in the `transformers` library; thus, this model cannot be loaded using the above Python API. Rather, we make the model available for download at the following link.
+We fine-tune our TCR-BERT model to predict LCMV GP33 antigen binding given TRA/TRB amino acid pairs (data from Daniel et al. [preprint](https://www.biorxiv.org/content/10.1101/2021.12.16.472900v1.full)). This uses an architecture augmented from those natively supported in the `transformers` library; thus, this model cannot be loaded using the above Python API. Rather, we make the model available for download at the following link.
 
 | Model version | Description | Link | tar.gz `md5sum` |
 | --- | --- | --- | --- |

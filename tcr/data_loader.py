@@ -940,7 +940,7 @@ def load_lcmv_vdj(
         )
     return retval
 
-
+@functools.lru_cache(maxsize=16)
 def load_lcmv_table(
     fname: str = os.path.join(LOCAL_DATA_DIR, "lcmv_tetramer_tcr.txt"),
     metadata_fname: str = os.path.join(LOCAL_DATA_DIR, "lcmv_all_metadata.txt.gz"),
@@ -1846,6 +1846,7 @@ def write_lcmv_subsampled_benchmark_data():
     # Write out the table at varying sizes
     tab_condensed = tab["TRB"]
     for s in [500, 1000, 1500, 2000, 2500, 5000, 10000]:
+        # Write GLIPH inputs
         t = tab_condensed.iloc[:s]
         t.to_csv(
             os.path.join(
@@ -1854,6 +1855,18 @@ def write_lcmv_subsampled_benchmark_data():
             sep="\t",
             index=False,
         )
+
+        # Write TCRDist3 inputs
+        write_lcmv_tcrdist3_input(
+            fname=os.path.join(
+                LOCAL_DATA_DIR,
+                "lcmv_runtime_benchmark_files",
+                f"tcrdist3_beta_lcmv_sub_{s}.tsv",
+            ),
+            dual_chain=False,
+            subset=s,
+        )
+
     return
 
 
@@ -1881,7 +1894,8 @@ def write_lcmv_tcrdist_input(fname: str = "temp.tsv"):
 def write_lcmv_tcrdist3_input(
     fname: str = os.path.join(EXTERNAL_EVAL_DIR, "lcmv_test_tcrdist3.tsv"),
     dual_chain: bool = True,
-):
+    subset: Union[str, int] = "test",
+) -> pd.DataFrame:
     """
     Write the LCMV data in a format for TCRDist, which expects 3 columns per chain
     cdr3_b_aa   v_b_gene    j_b_gene    # example for b chain
@@ -1900,8 +1914,12 @@ def write_lcmv_tcrdist3_input(
 
     lcmv = load_lcmv_table()
     df, labels = dedup_lcmv_table(lcmv, return_mode="full")
-    labels_sub = split_arr(labels, "test")
-    df_sub = split_arr(df, "test")  # We only evaluate test set clustering
+    if isinstance(subset, str):
+        labels_sub = split_arr(labels, "test")
+        df_sub = split_arr(df, "test")  # We only evaluate test set clustering
+    else:
+        labels_sub = labels[:subset]
+        df_sub = df.iloc[:subset]
     if dual_chain:
         retval = df_sub.loc[
             :, ["TRA", "v_a_gene", "j_a_gene", "TRB", "v_b_gene", "j_b_gene"]
@@ -1935,7 +1953,8 @@ def on_the_fly():
     # print(collections.Counter(table["celltype"]).most_common())
     # df = load_clonotypes_csv_general(sys.argv[1])
     # print(df)
-    print(write_lcmv_tcrdist3_input())
+    # print(write_lcmv_tcrdist3_input())
+    write_lcmv_subsampled_benchmark_data()
 
 
 if __name__ == "__main__":

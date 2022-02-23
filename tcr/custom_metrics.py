@@ -318,6 +318,21 @@ def percent_and_correct_clustered(
     ...     [('x', 'y', 'a', 'w'), ('b', 'c', 'z', 'd')],
     ... )
     (1.0, 0.75)
+
+    >>> percent_and_correct_clustered(  # Test for no dominant label
+    ...     {
+    ...         "w": "foo",
+    ...         "x": "bar",
+    ...         "y": "baz",
+    ...         "z": "fu",
+    ...         "a": "b4r",
+    ...         "b": "b4z",
+    ...         "c": "f00",
+    ...         "d": "f11",
+    ...     },
+    ...     [('x', 'y', 'a', 'w'), ('b', 'c', 'z', 'd')],
+    ... )
+    (1.0, 0.0)
     """
     correct_clustered, total_clustered = 0, 0
     for cluster in clusters:
@@ -329,7 +344,7 @@ def percent_and_correct_clustered(
         assert most_common_count <= len(cluster)
         if most_common_count / len(cluster) >= 0.5:
             correct_clustered += most_common_count
-            total_clustered += len(cluster)
+        total_clustered += len(cluster)
     if total_clustered > 0:
         perc_correct = correct_clustered / total_clustered
     else:  # Avoid zero division error

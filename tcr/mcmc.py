@@ -144,11 +144,7 @@ def generate_random_sequences(
 
 
 def generate_random_sequences_single(
-    seqs: Collection[str],
-    *,
-    method="pwm",
-    n: int = 256,
-    **kwargs,
+    seqs: Collection[str], *, method="pwm", n: int = 256, **kwargs,
 ) -> List[str]:
     """
     Given some sequences (e.g. TRBs), generate n random sequence pairs based on these
@@ -200,10 +196,7 @@ def generate_binding_sequences_using_nsp(
     for _ in range(n_iter + 1):  # +1 bc the first round is really just seeding
         # Predict the binding for each
         _labels, preds = model_utils.get_transformer_nsp_preds(
-            transformer,
-            sequences,
-            as_probs=True,
-            device=3,
+            transformer, sequences, as_probs=True, device=3,
         )
         largest_idx = np.argsort(preds[:, 1])[-sample_n:]
         per_iteration_pvalues.append(preds[largest_idx, 1])
@@ -231,7 +224,7 @@ def generate_binding_sequences_skorch(
     min_prob: Optional[float] = None,
     seed: Optional[int] = None,
     **kwargs,
-) -> Tuple[np.ndarray, List[Tuple[str, str]]]:
+) -> Tuple[np.ndarray, List[List[Tuple[str, str]]]]:
     """
     Run n_iterate to generate sequences that maximize binding
     if min_prob is given, stop early after the lowest of the top
@@ -241,6 +234,11 @@ def generate_binding_sequences_skorch(
     by accepting a skorch neuralnet rather than a dir to load from
 
     **kwargs passed to generate_random_sequences
+
+    Returns:
+    - matrix of (num_iters, num_seqs) shape with predicted probability of
+      sequences at each iteration
+    - List of length num_iters, each entry is a list of TRA/TRB pairs
     """
     if seed is not None:
         global MCMC_RNG

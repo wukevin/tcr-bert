@@ -259,10 +259,10 @@ def main():
     print(uniq_match_dists)
 
     if args.mode == "edit":
-        best_dist, second_best_dist = uniq_match_dists[:2]
+        best_dist, second_best_dist.third_best_dist = uniq_match_dists[:3]
         assert best_dist < second_best_dist
     elif args.mode == "blosum":
-        best_dist, second_best_dist = uniq_match_dists[::-1][:2]
+        best_dist, second_best_dist, third_best_dist = uniq_match_dists[::-1][:3]
         assert best_dist > second_best_dist
     else:
         raise ValueError
@@ -289,6 +289,18 @@ def main():
         second_best_mod_rows.append(r)
     pd.DataFrame(second_best_mod_rows).to_csv(
         os.path.join(args.outdir, "second_best_matches.csv")
+    )
+
+    # Third best
+    print(f"Third best: {third_best_dist}")
+    third_best_mod_rows = []
+    for i in np.where(np.array(match_dists) == third_best_dist)[0]:
+        print(eng_tcr[-1][i])
+        print(matches[i]["TRA_cdr3"], matches[i]["TRB_cdr3"])
+        r = splice_in_row(*eng_tcr[-1][i], matches[i])
+        third_best_mod_rows.append(r)
+    pd.DataFrame(third_best_mod_rows).to_csv(
+        os.path.join(args.outdir, "third_best_matches.csv")
     )
 
 

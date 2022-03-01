@@ -174,7 +174,7 @@ def splice_in_seq(new_seq: str, old_seq: str, full_seq: str) -> str:
     return retval
 
 
-def splice_in_row(tra: str, trb: str, ref_row: pd.Series) -> pd.Series:
+def splice_in_row(tra: str, trb: str, ref_row: pd.Series, src_notes:str="") -> pd.Series:
     """
     Splice the TRA and TRB into the reference row given
     """
@@ -245,6 +245,9 @@ def splice_in_row(tra: str, trb: str, ref_row: pd.Series) -> pd.Series:
     logging.info(
         f"Mismatches from full ref TRB to new TRB: {b_dist}/{len(ref_row['TRB_longest_consensus_read_TRUST4'])}"
     )
+
+    # Insert a column from the notes
+    retval['notes'] = src_notes
 
     return retval
 
@@ -323,7 +326,7 @@ def main():
     for i in idx:
         print(eng_tcr[-1][i])
         print(matches[i]["TRA_cdr3"], matches[i]["TRB_cdr3"])
-        r = splice_in_row(*eng_tcr[-1][i], matches[i])
+        r = splice_in_row(*eng_tcr[-1][i], matches[i], src_notes=f"Best {args.mode} = {best_dist}")
         best_mod_rows.append(r)
     pd.DataFrame(best_mod_rows).to_csv(os.path.join(args.outdir, "best_matches.csv"))
 
@@ -334,7 +337,7 @@ def main():
     for i in idx:
         print(eng_tcr[-1][i])
         print(matches[i]["TRA_cdr3"], matches[i]["TRB_cdr3"])
-        r = splice_in_row(*eng_tcr[-1][i], matches[i])
+        r = splice_in_row(*eng_tcr[-1][i], matches[i], src_notes=f"Second best {args.mode} = {second_best_dist}")
         second_best_mod_rows.append(r)
     pd.DataFrame(second_best_mod_rows).to_csv(
         os.path.join(args.outdir, "second_best_matches.csv")
@@ -346,7 +349,7 @@ def main():
     for i in np.where(np.array(match_dists) == third_best_dist)[0]:
         print(eng_tcr[-1][i])
         print(matches[i]["TRA_cdr3"], matches[i]["TRB_cdr3"])
-        r = splice_in_row(*eng_tcr[-1][i], matches[i])
+        r = splice_in_row(*eng_tcr[-1][i], matches[i], src_notes=f"Third best {args.mode} = {third_best_dist}")
         third_best_mod_rows.append(r)
     pd.DataFrame(third_best_mod_rows).to_csv(
         os.path.join(args.outdir, "third_best_matches.csv")

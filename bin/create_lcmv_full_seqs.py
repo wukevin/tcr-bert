@@ -6,6 +6,7 @@ import os, sys
 import json
 import argparse
 import collections
+import logging
 from typing import *
 
 import numpy as np
@@ -21,6 +22,9 @@ SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tcr")
 assert os.path.isdir(SRC_DIR)
 sys.path.append(SRC_DIR)
 import utils
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 def build_parser():
@@ -224,7 +228,52 @@ def splice_in_row(tra: str, trb: str, ref_row: pd.Series) -> pd.Series:
     )
     retval["TRB_longest_consensus_read_TRUST4"] = trb_consensus
 
+    # Checks and llogging
+    assert np.all(retval.index == ref_row.index)
+    check_row(retval)
+    a_dist = Levenshtein.distance(
+        ref_row["TRA_longest_consensus_read_TRUST4"],
+        retval["TRA_longest_consensus_read_TRUST4"],
+    )
+    b_dist = Levenshtein.distance(
+        ref_row["TRB_longest_consensus_read_TRUST4"],
+        retval["TRB_longest_consensus_read_TRUST4"],
+    )
+    logging.info(
+        f"Mismatches from full ref TRA to new TRA: {a_dist}/{len(ref_row['TRA_longest_consensus_read_TRUST4'])}"
+    )
+    logging.info(
+        f"Mismatches from full ref TRB to new TRB: {b_dist}/{len(ref_row['TRB_longest_consensus_read_TRUST4'])}"
+    )
+
     return retval
+
+
+def check_row(row: pd.Series) -> None:
+    """
+    Checks if the given row is valid. All checks done as assert statments
+    so will crash if anything fails
+    """
+    # We should be building only on tetramer positive cases
+    assert row["tetramer_class"] == "TetPos"
+
+    # Check that columns match up
+    assert row["tcr_cdr3s_aa"].split(";")[0][4:] == row["TRA_cdr3"]
+    assert row["tcr_cdr3s_aa"].split(";")[1][4:] == row["TRB_cdr3"]
+    assert row["tcr_cdr3s_nt"].split(";")[0][4:] == row["TRA_cdr3_nt"]
+    assert row["tcr_cdr3s_nt"].split(";")[1][4:] == row["TRB_cdr3_nt"]
+
+    # Check that columns encoding each other are consistent
+    assert utils.nt2aa(row["tcr_cdr3s_nt"].split(";")[0][4:]) == row["TRA_cdr3"]
+    assert utils.nt2aa(row["tcr_cdr3s_nt"].split(";")[1][4:]) == row["TRB_cdr3"]
+
+    # Check that seq1uences are subsets of the TRUST4 sequences
+    assert row["TRB_cdr3"] in row["TRB_cdr3_TRUST4"]
+    assert row["TRA_cdr3"] in row["TRA_cdr3_TRUST4"]
+    assert row["TRA_cdr3_nt"] in row["TRA_cdr3_nt_TRUST4"]
+    assert row["TRB_cdr3_nt"] in row["TRB_cdr3_nt_TRUST4"]
+    assert row["TRA_cdr3_nt_TRUST4"] in row["TRA_longest_consensus_read_TRUST4"]
+    assert row["TRB_cdr3_nt_TRUST4"] in row["TRB_longest_consensus_read_TRUST4"]
 
 
 def main():

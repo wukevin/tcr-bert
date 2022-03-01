@@ -250,6 +250,8 @@ def splice_in_row(
 
     # Insert a column from the notes
     retval["notes"] = src_notes
+    retval["TRA_consensus_num_nt_muts"] = a_dist
+    retval["TRB_consensus_num_nt_muts"] = b_dist
 
     return retval
 

@@ -21,10 +21,13 @@ import Levenshtein
 SRC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tcr")
 assert os.path.isdir(SRC_DIR)
 sys.path.append(SRC_DIR)
+import data_loader as dl
 import utils
 
 
 logging.basicConfig(level=logging.INFO)
+
+STOP_CODONS = ["TAG", "TGA", "TAA"]
 
 
 def build_parser():
@@ -49,7 +52,7 @@ def build_parser():
 
 def find_best_ref_match(
     tcrs: Tuple[str, str], ref_df: pd.DataFrame, mode: str = "edit"
-):
+) -> Tuple[int, pd.Series]:
     """
     Find the row in the given reference df that best matches the given tcr pair
     This can be done using either minimm "edit" distance or maximum BLOSUM62 score
@@ -78,11 +81,15 @@ def find_best_ref_match(
     if mode == "edit":
         d = [dist_func(tcrs, row) for _, row in ref_df.iterrows()]
         best_idx = np.argmin(d)
-        return min(d), ref_df.iloc[best_idx].copy(deep=True)
+        ref_row = ref_df.iloc[best_idx].copy(deep=True)
+        # check_row(ref_row)
+        return min(d), ref_row
     elif mode == "blosum":
         d = [blosum_func(tcrs, row) for _, row in ref_df.iterrows()]
         best_idx = np.argmax(d)
-        return max(d), ref_df.iloc[best_idx].copy(deep=True)
+        ref_row = ref_df.iloc[best_idx].copy(deep=True)
+        # check_row(ref_row)
+        return max(d), ref_row
     else:
         raise ValueError(f"Unrecognized mode: {mode}")
 
@@ -230,7 +237,7 @@ def splice_in_row(
     )
     retval["TRB_longest_consensus_read_TRUST4"] = trb_consensus
 
-    # Checks and llogging
+    # Checks and logging
     assert np.all(retval.index == ref_row.index)
     check_row(retval)
     a_dist = Levenshtein.distance(
@@ -281,6 +288,24 @@ def check_row(row: pd.Series) -> None:
     assert row["TRB_cdr3_nt"] in row["TRB_cdr3_nt_TRUST4"]
     assert row["TRA_cdr3_nt_TRUST4"] in row["TRA_longest_consensus_read_TRUST4"]
     assert row["TRB_cdr3_nt_TRUST4"] in row["TRB_longest_consensus_read_TRUST4"]
+
+    # Check no stop codon
+    tra_chunks = dl.chunkify(row["TRA_cdr3_nt"], 3)
+    assert not set(tra_chunks).intersection(STOP_CODONS), "Found stop codons in TRA"
+    trb_chunks = dl.chunkify(row["TRB_cdr3_nt"], 3)
+    assert not set(trb_chunks).intersection(STOP_CODONS), "Found stop codons in TRB"
+
+    # Check construction rules
+    # assert (
+    #     "gagggcagaggaagtctgctaacatgcggtgacgtcgaggagaatcctggccca".upper()
+    #     in row["TRB_cdr3_nt_TRUST4"].upper()
+    # ), "Cannot find T2A sequence in TRB"
+    # assert (
+    #     "GCCACC" in row["TRB_longest_consensus_read_TRUST4"]
+    # ), "Cannot find Kozak sequence"
+    # assert (
+    #     "GGCTCCGGA" in row["TRB_longest_consensus_read_TRUST4"]
+    # ), "Cannot find GSG linker"
 
 
 def main():

@@ -170,7 +170,7 @@ def splice_in_seq(new_seq: str, old_seq: str, full_seq: str) -> str:
     'CASSRKDES'
     """
     # Locate the old sequence in the full sequence
-    assert old_seq in full_seq
+    assert old_seq in full_seq, f"Could not find {old_seq} in {full_seq}"
     assert full_seq.count(old_seq) == 1, "Sequence to be replaced is nonunique"
     old_seq_start_idx = full_seq.index(old_seq)
     old_seq_stop_idx = old_seq_start_idx + len(old_seq)
@@ -353,8 +353,8 @@ def main():
     best_mod_rows = []
     idx = np.where(np.array(match_dists) == best_dist)[0]
     for i in idx:
-        print(eng_tcr[-1][i])
-        print(matches[i]["TRA_cdr3"], matches[i]["TRB_cdr3"])
+        print(f"Engineered: {eng_tcr[-1][i]}")
+        print(f"Original: {matches[i]['TRA_cdr3'], matches[i]['TRB_cdr3']}")
         r = splice_in_row(
             *eng_tcr[-1][i], matches[i], src_notes=f"Best {args.mode} = {best_dist}"
         )

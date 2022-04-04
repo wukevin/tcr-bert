@@ -199,7 +199,7 @@ def nt2aa(seq: str) -> str:
     table = CodonTable.standard_dna_table
     seq = seq.upper()
     protein = ""
-    assert len(seq) % 3 == 0
+    assert len(seq) % 3 == 0, f"Sequence of length {len(seq)} not divisible by 3"
     for i in range(0, len(seq), 3):
         codon = seq[i : i + 3]
         protein += table.forward_table[codon]

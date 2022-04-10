@@ -223,6 +223,7 @@ def generate_binding_sequences_skorch(
     sample_ratio=0.5,
     min_prob: Optional[float] = None,
     seed: Optional[int] = None,
+    neg_baseline: bool = False,
     **kwargs,
 ) -> Tuple[np.ndarray, List[List[Tuple[str, str]]]]:
     """
@@ -232,6 +233,8 @@ def generate_binding_sequences_skorch(
 
     Compared to other functions, this attempts to be more general
     by accepting a skorch neuralnet rather than a dir to load from
+
+    If neg_baseline is True, then optimize for NONbinding instead of binding
 
     **kwargs passed to generate_random_sequences
 
@@ -254,7 +257,7 @@ def generate_binding_sequences_skorch(
         tra, trb = zip(*sequences)
         this_iter_dset = dset_obj(tra, trb, np.zeros(len(sequences)), **dset_kwargs)
         # generate predictions and rank the sequences
-        preds = net.predict_proba(this_iter_dset)[:, 1]
+        preds = net.predict_proba(this_iter_dset)[:, 0 if neg_baseline else 1]
         largest_idx = np.argsort(preds)[-sample_n:]
         per_iteration_pvals.append(preds[largest_idx])
         good_seqs = [sequences[i] for i in largest_idx]

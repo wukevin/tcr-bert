@@ -14,7 +14,7 @@ dependencies:
   - blast=2.5.0
   - cached_property=1.5.2
   - cudatoolkit=10.2
-  - gdown=4.2.0
+  - gdown=4.4.0
   - gitpython=3.1.9
   - hdf5=1.10.6
   - joblib=1.0.1
@@ -42,6 +42,7 @@ dependencies:
   - tokenizers=0.10.1
   - tqdm=4.50.2
   - transformers=4.4.2
+  - ipywidgets
   - pip:
     - bertviz==1.1.0
     - h5py==3.2.1
